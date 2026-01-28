@@ -1,38 +1,54 @@
 import 'package:get_it/get_it.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import '../../features/schdules/data/datasources/task_local_data_source.dart';
 import '../../features/schdules/data/datasources/task_local_data_source_impl.dart';
-import '../../features/schdules/data/models/task_model.dart';
 import '../../features/schdules/data/repo/schedule_repo_impl.dart';
 import '../../features/schdules/domain/repo/schedule_repository.dart';
 import '../../features/schdules/presentation/cubit/task_cubit.dart';
-import '../utils/constants.dart';
+
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../services/sync_service.dart';
+import '../services/database_service.dart';
+
+import '../../features/auth/data/repo/auth_repository_impl.dart';
+import '../../features/auth/domain/repo/auth_repository.dart';
+import '../../features/auth/presentation/cubit/auth_cubit.dart';
 
 final sl = GetIt.instance;
 
 Future<void> initializeDependencies() async {
-  // Initialize Hive
-  await Hive.initFlutter();
+  // Initialize Supabase
+  await Supabase.initialize(
+    url: dotenv.env['SUPABASE_URL'] ?? '',
+    anonKey: dotenv.env['SUPABASE_ANON_KEY'] ?? '',
+  );
 
-  // Register Hive adapter
-  Hive.registerAdapter(TaskModelAdapter());
+  // Register DatabaseService
+  final databaseService = DatabaseService();
+  sl.registerLazySingleton<DatabaseService>(() => databaseService);
 
-  // Open Hive box
-  final tasksBox = await Hive.openBox<TaskModel>(HiveBoxes.tasksBox);
+  // Supabase Client
+  sl.registerLazySingleton<SupabaseClient>(() => Supabase.instance.client);
 
-  // Register Hive box as singleton
-  sl.registerLazySingleton<Box<TaskModel>>(() => tasksBox);
+  // Services
+  sl.registerLazySingleton<SyncService>(
+    () => SyncService(databaseService: sl(), supabase: sl()),
+  );
 
   // Data sources
   sl.registerLazySingleton<TaskLocalDataSource>(
-    () => TaskLocalDataSourceImpl(tasksBox: sl()),
+    () => TaskLocalDataSourceImpl(databaseService: sl()),
   );
 
   // Repositories
+  sl.registerLazySingleton<AuthRepository>(
+    () => AuthRepositoryImpl(supabase: sl()),
+  );
   sl.registerLazySingleton<ScheduleRepository>(
     () => ScheduleRepositoryImpl(localDataSource: sl()),
   );
 
   // Cubits (Factory - new instance each time)
-  sl.registerFactory(() => TaskCubit(repository: sl()));
+  sl.registerFactory(() => AuthCubit(repository: sl()));
+  sl.registerFactory(() => TaskCubit(repository: sl(), syncService: sl()));
 }

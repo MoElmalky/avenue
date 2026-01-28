@@ -6,6 +6,7 @@ import 'package:line/features/schdules/presentation/views/timeline_view.dart';
 import '../cubit/task_cubit.dart';
 import '../cubit/task_state.dart';
 import '../widgets/task_card.dart';
+import '../../../auth/presentation/cubit/auth_cubit.dart';
 
 class HomeView extends StatefulWidget {
   final DateTime? selectedDate;
@@ -24,9 +25,7 @@ class _HomeViewState extends State<HomeView> {
     _date = widget.selectedDate ?? DateTime.now();
     _date = DateTime(_date.year, _date.month, _date.day);
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<TaskCubit>().loadTasks(date: _date);
-    });
+    context.read<TaskCubit>().loadTasks(date: _date, shouldSync: false);
   }
 
   @override
@@ -41,7 +40,24 @@ class _HomeViewState extends State<HomeView> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
+        leading: Navigator.canPop(context)
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.black87),
+                onPressed: () => Navigator.pop(context),
+              )
+            : IconButton(
+                icon: const Icon(Icons.logout, color: Colors.redAccent),
+                onPressed: () {
+                  context.read<AuthCubit>().signOut();
+                },
+              ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.sync),
+            onPressed: () {
+              context.read<TaskCubit>().syncTasks();
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.timeline),
             onPressed: () {
@@ -57,11 +73,13 @@ class _HomeViewState extends State<HomeView> {
       ),
       body: BlocBuilder<TaskCubit, TaskState>(
         builder: (context, state) {
-          if (state is TaskLoading) {
+          // If loading OR the data is for a different date, show loading
+          if (state is TaskLoading ||
+              (state.selectedDate != null && state.selectedDate != _date)) {
             return const Center(child: CircularProgressIndicator());
           } else if (state is TaskLoaded) {
             final tasks = state.tasks;
-            final completedTasks = tasks.where((t) => t.isDone).length;
+            final completedTasks = tasks.where((t) => t.completed).length;
             final pendingTasks = tasks.length - completedTasks;
 
             return Column(

@@ -1,35 +1,33 @@
-import 'package:hive_flutter/hive_flutter.dart';
+import 'package:sqflite/sqflite.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/utils/constants.dart';
+import '../../../../core/services/database_service.dart';
 import '../models/task_model.dart';
 import 'task_local_data_source.dart';
 
 class TaskLocalDataSourceImpl implements TaskLocalDataSource {
-  final Box<TaskModel> tasksBox;
+  final DatabaseService databaseService;
 
-  TaskLocalDataSourceImpl({required this.tasksBox});
+  TaskLocalDataSourceImpl({required this.databaseService});
 
   @override
-  List<TaskModel> getTasksByDate(DateTime date) {
+  Future<List<TaskModel>> getTasksByDate(DateTime date) async {
     try {
-      // Normalize the date to midnight
-      final normalizedDate = DateTime(date.year, date.month, date.day);
+      final db = await databaseService.database;
+      final normalizedDate = DateTime(
+        date.year,
+        date.month,
+        date.day,
+      ).toIso8601String().split('T')[0];
 
-      // Filter tasks by date
-      final allTasks = tasksBox.values.toList();
-      final filteredTasks = allTasks.where((task) {
-        final taskDate = DateTime(
-          task.date.year,
-          task.date.month,
-          task.date.day,
-        );
-        return taskDate == normalizedDate;
-      }).toList();
+      final List<Map<String, dynamic>> maps = await db.query(
+        'tasks',
+        where: "task_date LIKE ? AND is_deleted = 0",
+        whereArgs: ['$normalizedDate%'],
+        orderBy: 'start_time ASC',
+      );
 
-      // Sort by start time
-      filteredTasks.sort((a, b) => a.startTime.compareTo(b.startTime));
-
-      return filteredTasks;
+      return List.generate(maps.length, (i) => TaskModel.fromMap(maps[i]));
     } catch (e) {
       throw CacheException(ErrorMessages.loadTasksFailed);
     }
@@ -38,7 +36,13 @@ class TaskLocalDataSourceImpl implements TaskLocalDataSource {
   @override
   Future<void> addTask(TaskModel task) async {
     try {
-      await tasksBox.put(task.id, task);
+      final db = await databaseService.database;
+      final taskToSave = task.copyWith(serverUpdatedAt: DateTime.now().toUtc());
+      await db.insert(
+        'tasks',
+        taskToSave.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
     } catch (e) {
       throw CacheException(ErrorMessages.addTaskFailed);
     }
@@ -47,10 +51,17 @@ class TaskLocalDataSourceImpl implements TaskLocalDataSource {
   @override
   Future<void> updateTask(TaskModel task) async {
     try {
-      if (!tasksBox.containsKey(task.id)) {
+      final db = await databaseService.database;
+      final taskToSave = task.copyWith(serverUpdatedAt: DateTime.now().toUtc());
+      final count = await db.update(
+        'tasks',
+        taskToSave.toMap(),
+        where: 'id = ?',
+        whereArgs: [task.id],
+      );
+      if (count == 0) {
         throw CacheException(ErrorMessages.taskNotFound);
       }
-      await tasksBox.put(task.id, task);
     } catch (e) {
       if (e is CacheException) rethrow;
       throw CacheException(ErrorMessages.updateTaskFailed);
@@ -60,20 +71,36 @@ class TaskLocalDataSourceImpl implements TaskLocalDataSource {
   @override
   Future<void> deleteTask(String id) async {
     try {
-      if (!tasksBox.containsKey(id)) {
-        throw CacheException(ErrorMessages.taskNotFound);
-      }
-      await tasksBox.delete(id);
+      final db = await databaseService.database;
+      // Soft delete
+      await db.update(
+        'tasks',
+        {
+          'is_deleted': 1,
+          'server_updated_at': DateTime.now().toUtc().toIso8601String(),
+        },
+        where: 'id = ?',
+        whereArgs: [id],
+      );
     } catch (e) {
-      if (e is CacheException) rethrow;
       throw CacheException(ErrorMessages.deleteTaskFailed);
     }
   }
 
   @override
-  TaskModel? getTaskById(String id) {
+  Future<TaskModel?> getTaskById(String id) async {
     try {
-      return tasksBox.get(id);
+      final db = await databaseService.database;
+      final List<Map<String, dynamic>> maps = await db.query(
+        'tasks',
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+
+      if (maps.isNotEmpty) {
+        return TaskModel.fromMap(maps.first);
+      }
+      return null;
     } catch (e) {
       throw CacheException(ErrorMessages.cacheFailure);
     }

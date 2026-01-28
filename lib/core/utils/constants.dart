@@ -1,8 +1,3 @@
-// Hive Box Names
-class HiveBoxes {
-  static const String tasksBox = 'tasksBox';
-}
-
 // Error Messages
 class ErrorMessages {
   static const String cacheFailure = 'فشل في حفظ أو استرجاع البيانات';

@@ -23,7 +23,7 @@ class TaskCard extends StatelessWidget {
       onTap: onTap,
       onLongPress: onLongPress,
       child: Opacity(
-        opacity: task.isDone ? 0.6 : 1.0,
+        opacity: task.completed ? 0.6 : 1.0,
         child: Container(
           height: height,
           decoration: BoxDecoration(
@@ -37,8 +37,10 @@ class TaskCard extends StatelessWidget {
               ),
             ],
             border: Border.all(
-              color: task.isDone ? Colors.green.shade100 : Colors.grey.shade100,
-              width: task.isDone ? 2 : 1,
+              color: task.completed
+                  ? Colors.green.shade100
+                  : Colors.grey.shade100,
+              width: task.completed ? 2 : 1,
             ),
           ),
           child: ClipRRect(
@@ -62,12 +64,12 @@ class TaskCard extends StatelessWidget {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            task.title,
+                            task.name,
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
                               color: Colors.black87,
-                              decoration: task.isDone
+                              decoration: task.completed
                                   ? TextDecoration.lineThrough
                                   : null,
                             ),
@@ -76,7 +78,7 @@ class TaskCard extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        if (task.isDone)
+                        if (task.completed)
                           const Icon(
                             Icons.check_circle,
                             color: Colors.green,
@@ -131,7 +133,7 @@ class TaskCard extends StatelessWidget {
                             ),
                           ),
                           const Spacer(),
-                          if (task.isDone)
+                          if (task.completed)
                             const Icon(
                               Icons.check_circle,
                               color: Colors.green,
@@ -141,12 +143,12 @@ class TaskCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        task.title,
+                        task.name,
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
                           color: Colors.black87,
-                          decoration: task.isDone
+                          decoration: task.completed
                               ? TextDecoration.lineThrough
                               : null,
                         ),
@@ -172,7 +174,8 @@ class TaskCard extends StatelessWidget {
     );
   }
 
-  String _formatTime(TimeOfDay time) {
+  String _formatTime(TimeOfDay? time) {
+    if (time == null) return '--:--';
     final hour = time.hour.toString().padLeft(2, '0');
     final minute = time.minute.toString().padLeft(2, '0');
     return '$hour:$minute';

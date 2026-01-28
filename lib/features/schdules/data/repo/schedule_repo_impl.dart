@@ -11,9 +11,11 @@ class ScheduleRepositoryImpl implements ScheduleRepository {
   ScheduleRepositoryImpl({required this.localDataSource});
 
   @override
-  Future<Either<Failure, List<TaskModel>>> getTasksByDate(DateTime date) async {
+  Future<Either<Failure, List<TaskModel>>> getTasksByDate(
+    DateTime taskDate,
+  ) async {
     try {
-      final tasks = localDataSource.getTasksByDate(date);
+      final tasks = await localDataSource.getTasksByDate(taskDate);
       return Right(tasks);
     } on CacheException catch (e) {
       return Left(CacheFailure(e.message));
@@ -61,12 +63,12 @@ class ScheduleRepositoryImpl implements ScheduleRepository {
   @override
   Future<Either<Failure, void>> toggleTaskDone(String id) async {
     try {
-      final task = localDataSource.getTaskById(id);
+      final task = await localDataSource.getTaskById(id);
       if (task == null) {
         return const Left(CacheFailure('المهمة غير موجودة'));
       }
 
-      final updatedTask = task.copyWith(isDone: !task.isDone);
+      final updatedTask = task.copyWith(completed: !task.completed);
       await localDataSource.updateTask(updatedTask);
       return const Right(null);
     } on CacheException catch (e) {

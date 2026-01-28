@@ -21,9 +21,7 @@ class _TimelineViewState extends State<TimelineView> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<TaskCubit>().loadTasks(date: widget.selectedDate);
-    });
+    context.read<TaskCubit>().loadTasks(date: widget.selectedDate);
   }
 
   @override
@@ -41,7 +39,10 @@ class _TimelineViewState extends State<TimelineView> {
       ),
       body: BlocBuilder<TaskCubit, TaskState>(
         builder: (context, state) {
-          if (state is TaskLoading) {
+          // If loading OR the data is for a different date, show loading
+          if (state is TaskLoading ||
+              (state.selectedDate != null &&
+                  state.selectedDate != widget.selectedDate)) {
             return const Center(child: CircularProgressIndicator());
           } else if (state is TaskLoaded) {
             return SingleChildScrollView(
@@ -123,7 +124,7 @@ class TimelineLayout extends StatelessWidget {
           // Task start/end times
           ...tasks.expand((task) {
             final startTop = _calculateTopOffset(
-              task.startTimeOfDay,
+              task.startTimeOfDay!,
               startHour,
             );
             final endTop = startTop + _calculateHeight(task.durationInMinutes);
@@ -159,7 +160,7 @@ class TimelineLayout extends StatelessWidget {
                 left: timeColumnWidth - 5,
                 top: startTop - 10,
                 child: Text(
-                  _formatTime(task.startTimeOfDay),
+                  _formatTime(task.startTimeOfDay!),
                   style: TextStyle(
                     color: task.color,
                     fontSize: 10,
@@ -172,7 +173,7 @@ class TimelineLayout extends StatelessWidget {
                 left: timeColumnWidth - 5,
                 top: endTop - 10,
                 child: Text(
-                  _formatTime(task.endTimeOfDay),
+                  _formatTime(task.endTimeOfDay!),
                   style: TextStyle(
                     color: task.color,
                     fontSize: 10,
@@ -191,7 +192,7 @@ class TimelineLayout extends StatelessWidget {
 
             return group.map((task) {
               final topOffset = _calculateTopOffset(
-                task.startTimeOfDay,
+                task.startTimeOfDay!,
                 startHour,
               );
               final height = _calculateHeight(task.durationInMinutes);
@@ -214,12 +215,12 @@ class TimelineLayout extends StatelessWidget {
                 child: TaskCard(
                   task: task,
                   height: height,
-                  onTap: _isPastDate(task.date)
+                  onTap: _isPastDate(task.taskDate)
                       ? null
                       : () {
                           context.read<TaskCubit>().toggleTaskDone(task.id);
                         },
-                  onLongPress: _isPastDate(task.date)
+                  onLongPress: _isPastDate(task.taskDate)
                       ? null
                       : () {
                           _showTaskOptions(context, task);
@@ -304,25 +305,25 @@ class TimelineLayout extends StatelessWidget {
     final sortedTasks = List<TaskModel>.from(tasks)
       ..sort(
         (a, b) => _timeToDouble(
-          a.startTimeOfDay,
-        ).compareTo(_timeToDouble(b.startTimeOfDay)),
+          a.startTimeOfDay!,
+        ).compareTo(_timeToDouble(b.startTimeOfDay!)),
       );
 
     List<List<TaskModel>> groups = [];
     List<TaskModel> currentGroup = [sortedTasks[0]];
-    double currentEnd = _timeToDouble(sortedTasks[0].endTimeOfDay);
+    double currentEnd = _timeToDouble(sortedTasks[0].endTimeOfDay!);
 
     for (int i = 1; i < sortedTasks.length; i++) {
       final task = sortedTasks[i];
-      if (_timeToDouble(task.startTimeOfDay) < currentEnd) {
+      if (_timeToDouble(task.startTimeOfDay!) < currentEnd) {
         currentGroup.add(task);
-        currentEnd = currentEnd > _timeToDouble(task.endTimeOfDay)
+        currentEnd = currentEnd > _timeToDouble(task.endTimeOfDay!)
             ? currentEnd
-            : _timeToDouble(task.endTimeOfDay);
+            : _timeToDouble(task.endTimeOfDay!);
       } else {
         groups.add(currentGroup);
         currentGroup = [task];
-        currentEnd = _timeToDouble(task.endTimeOfDay);
+        currentEnd = _timeToDouble(task.endTimeOfDay!);
       }
     }
     groups.add(currentGroup);
@@ -336,16 +337,16 @@ class TimelineLayout extends StatelessWidget {
     for (var task in group) {
       bool assigned = false;
       for (int i = 0; i < columnEnds.length; i++) {
-        if (_timeToDouble(task.startTimeOfDay) >= columnEnds[i]) {
+        if (_timeToDouble(task.startTimeOfDay!) >= columnEnds[i]) {
           columns[task] = i;
-          columnEnds[i] = _timeToDouble(task.endTimeOfDay);
+          columnEnds[i] = _timeToDouble(task.endTimeOfDay!);
           assigned = true;
           break;
         }
       }
       if (!assigned) {
         columns[task] = columnEnds.length;
-        columnEnds.add(_timeToDouble(task.endTimeOfDay));
+        columnEnds.add(_timeToDouble(task.endTimeOfDay!));
       }
     }
     return columns;

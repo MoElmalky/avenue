@@ -2,30 +2,34 @@ import 'package:equatable/equatable.dart';
 import '../../data/models/task_model.dart';
 
 abstract class TaskState extends Equatable {
-  const TaskState();
+  final DateTime? selectedDate;
+  const TaskState({this.selectedDate});
 
   @override
-  List<Object> get props => [];
+  List<Object?> get props => [selectedDate];
 }
 
 class TaskInitial extends TaskState {}
 
-class TaskLoading extends TaskState {}
+class TaskLoading extends TaskState {
+  const TaskLoading({super.selectedDate});
+}
 
 class TaskLoaded extends TaskState {
   final List<TaskModel> tasks;
 
-  const TaskLoaded(this.tasks);
+  const TaskLoaded(this.tasks, {required DateTime selectedDate})
+    : super(selectedDate: selectedDate);
 
   @override
-  List<Object> get props => [tasks];
+  List<Object?> get props => [tasks, selectedDate];
 }
 
 class TaskError extends TaskState {
   final String message;
 
-  const TaskError(this.message);
+  const TaskError(this.message, {super.selectedDate});
 
   @override
-  List<Object> get props => [message];
+  List<Object?> get props => [message, selectedDate];
 }

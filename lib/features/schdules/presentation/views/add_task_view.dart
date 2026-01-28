@@ -30,9 +30,9 @@ class _AddTaskViewState extends State<AddTaskView> {
   void initState() {
     super.initState();
     final task = widget.task;
-    _selectedImportance = 'Medium'; // Default or from task if added to model
+    _selectedImportance = task?.importanceType ?? 'Medium';
     _selectedCategory = task?.category ?? 'Meeting';
-    _titleController = TextEditingController(text: task?.title);
+    _titleController = TextEditingController(text: task?.name);
     _startTime = task?.startTimeOfDay;
     _endTime = task?.endTimeOfDay;
 
@@ -347,21 +347,22 @@ class _AddTaskViewState extends State<AddTaskView> {
                         });
 
                         if (_formKey.currentState!.validate()) {
-                          final date =
-                              widget.task?.date ??
+                          final taskDate =
+                              widget.task?.taskDate ??
                               widget.initialDate ??
                               DateTime.now();
 
                           final task = TaskModel.fromTimeOfDay(
                             id: widget.task?.id,
-                            title: _titleController.text,
-                            description: widget.task?.description ?? '',
+                            name: _titleController.text,
+                            desc: widget.task?.desc ?? '',
                             startTime: _startTime!,
                             endTime: _endTime!,
-                            date: date,
+                            taskDate: taskDate,
                             category: _selectedCategory,
                             color: _getCategoryColor(_selectedCategory),
-                            isDone: widget.task?.isDone ?? false,
+                            completed: widget.task?.completed ?? false,
+                            importanceType: _selectedImportance,
                           );
 
                           final state = context.read<TaskCubit>().state;
@@ -495,10 +496,10 @@ class _AddTaskViewState extends State<AddTaskView> {
   double _timeToDouble(TimeOfDay time) => time.hour + (time.minute / 60.0);
 
   bool _tasksOverlap(TaskModel t1, TaskModel t2) {
-    final start1 = _timeToDouble(t1.startTimeOfDay);
-    final end1 = _timeToDouble(t1.endTimeOfDay);
-    final start2 = _timeToDouble(t2.startTimeOfDay);
-    final end2 = _timeToDouble(t2.endTimeOfDay);
+    final start1 = _timeToDouble(t1.startTimeOfDay!);
+    final end1 = _timeToDouble(t1.endTimeOfDay!);
+    final start2 = _timeToDouble(t2.startTimeOfDay!);
+    final end2 = _timeToDouble(t2.endTimeOfDay!);
     return (start1 < end2 && end1 > start2);
   }
 

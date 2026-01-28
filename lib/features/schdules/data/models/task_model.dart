@@ -1,51 +1,147 @@
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
 import 'package:uuid/uuid.dart';
 
-part 'task_model.g.dart';
-
-@HiveType(typeId: 0)
-class TaskModel extends HiveObject {
-  @HiveField(0)
-  late String id;
-
-  @HiveField(1)
-  late String title;
-
-  @HiveField(2)
-  late String description;
-
-  @HiveField(3)
-  late DateTime startTime;
-
-  @HiveField(4)
-  late DateTime endTime;
-
-  @HiveField(5)
-  late DateTime date; // Normalized to day (00:00:00)
-
-  @HiveField(6)
-  late bool isDone;
-
-  @HiveField(7)
-  late String category;
-
-  @HiveField(8)
-  late int colorValue;
+class TaskModel {
+  final String id;
+  final String name;
+  final String? desc;
+  final DateTime taskDate;
+  final DateTime? startTime;
+  final DateTime? endTime;
+  final bool completed;
+  final String category;
+  final int colorValue;
+  final bool oneTime;
+  final bool isDeleted;
+  final DateTime serverUpdatedAt;
+  final String? importanceType;
 
   TaskModel({
     String? id,
-    required this.title,
-    required this.description,
-    required this.startTime,
-    required this.endTime,
-    required this.date,
-    this.isDone = false,
+    required this.name,
+    this.desc,
+    required this.taskDate,
+    this.startTime,
+    this.endTime,
+    this.completed = false,
     required this.category,
-    int? colorValue,
-  }) {
-    this.id = id ?? const Uuid().v4();
-    this.colorValue = colorValue ?? Colors.blue.value;
+    required this.colorValue,
+    bool? oneTime,
+    bool? isDeleted,
+    DateTime? serverUpdatedAt,
+    this.importanceType,
+  }) : id = id ?? const Uuid().v4(),
+       oneTime = oneTime ?? true,
+       isDeleted = isDeleted ?? false,
+       serverUpdatedAt = serverUpdatedAt ?? DateTime.now().toUtc();
+
+  // SQLite Mapping
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'name': name,
+      'desc': desc,
+      'task_date': taskDate.toIso8601String(),
+      'start_time': startTime?.toIso8601String(),
+      'end_time': endTime?.toIso8601String(),
+      'completed': completed ? 1 : 0,
+      'category': category,
+      'color_value': colorValue,
+      'one_time': oneTime ? 1 : 0,
+      'is_deleted': isDeleted ? 1 : 0,
+      'server_updated_at': serverUpdatedAt.toIso8601String(),
+      'importance_type': importanceType,
+    };
+  }
+
+  factory TaskModel.fromMap(Map<String, dynamic> map) {
+    return TaskModel(
+      id: map['id'] ?? const Uuid().v4(),
+      name: map['name'] ?? map['title'] ?? 'Untitled Task',
+      desc: map['desc'] ?? map['description'],
+      taskDate: DateTime.parse(
+        map['task_date'] ?? map['date'] ?? DateTime.now().toIso8601String(),
+      ),
+      startTime: map['start_time'] != null
+          ? DateTime.parse(map['start_time'])
+          : null,
+      endTime: map['end_time'] != null ? DateTime.parse(map['end_time']) : null,
+      completed: (map['completed'] ?? map['is_done']) == 1,
+      category: map['category'] ?? 'Meeting',
+      colorValue: map['color_value'] ?? 0xFF004D61,
+      oneTime: (map['one_time'] ?? 1) == 1,
+      isDeleted: (map['is_deleted'] ?? 0) == 1,
+      serverUpdatedAt: DateTime.parse(
+        map['server_updated_at'] ??
+            map['updated_at'] ??
+            DateTime.now().toIso8601String(),
+      ),
+      importanceType: map['importance_type'],
+    );
+  }
+
+  // Supabase Mapping
+  Map<String, dynamic> toSupabaseJson(String userId) {
+    return {
+      'id': id,
+      'user_id': userId,
+      'name': name,
+      'desc': desc,
+      'task_date': taskDate.toIso8601String().split('T')[0], // YYYY-MM-DD
+      'start_time': startTime
+          ?.toIso8601String()
+          .split('T')[1]
+          .substring(0, 8), // HH:mm:ss
+      'end_time': endTime
+          ?.toIso8601String()
+          .split('T')[1]
+          .substring(0, 8), // HH:mm:ss
+      'completed': completed,
+      'category': category,
+      'color_value': colorValue,
+      'one_time': oneTime,
+      'is_deleted': isDeleted,
+      'server_updated_at': serverUpdatedAt.toIso8601String(),
+      'importance_type': importanceType,
+    };
+  }
+
+  factory TaskModel.fromSupabaseJson(Map<String, dynamic> json) {
+    // Parse time strings back to DateTime if they exist
+    DateTime? parseTime(String? timeStr, DateTime date) {
+      if (timeStr == null) return null;
+      final parts = timeStr.split(':');
+      return DateTime(
+        date.year,
+        date.month,
+        date.day,
+        int.parse(parts[0]),
+        int.parse(parts[1]),
+        int.parse(parts[2]),
+      );
+    }
+
+    final dateStr =
+        json['task_date'] ?? json['date'] ?? DateTime.now().toIso8601String();
+    final date = DateTime.parse(dateStr);
+
+    return TaskModel(
+      id: json['id'] ?? const Uuid().v4(),
+      name: json['name'] ?? 'Untitled Task',
+      desc: json['desc'],
+      taskDate: date,
+      startTime: parseTime(json['start_time'], date),
+      endTime: parseTime(json['end_time'], date),
+      completed: json['completed'] ?? false,
+      category: json['category'] ?? 'Meeting',
+      colorValue: json['color_value'] ?? 0xFF004D61,
+      oneTime: json['one_time'] ?? true,
+      isDeleted: json['is_deleted'] ?? false,
+      serverUpdatedAt: json['server_updated_at'] != null
+          ? DateTime.parse(json['server_updated_at']).toUtc()
+          : DateTime.now().toUtc(),
+      importanceType: json['importance_type'],
+    );
   }
 
   // Helper to get Color from colorValue
@@ -53,33 +149,42 @@ class TaskModel extends HiveObject {
 
   // Helper to get duration in minutes
   int get durationInMinutes {
-    final duration = endTime.difference(startTime).inMinutes;
+    if (startTime == null || endTime == null) return 0;
+    final duration = endTime!.difference(startTime!).inMinutes;
     return duration < 0 ? duration + (24 * 60) : duration;
   }
 
   // Helper to get TimeOfDay from DateTime
-  TimeOfDay get startTimeOfDay =>
-      TimeOfDay(hour: startTime.hour, minute: startTime.minute);
-  TimeOfDay get endTimeOfDay =>
-      TimeOfDay(hour: endTime.hour, minute: endTime.minute);
+  TimeOfDay? get startTimeOfDay => startTime != null
+      ? TimeOfDay(hour: startTime!.hour, minute: startTime!.minute)
+      : null;
+  TimeOfDay? get endTimeOfDay => endTime != null
+      ? TimeOfDay(hour: endTime!.hour, minute: endTime!.minute)
+      : null;
 
   // Factory to create from UI (with TimeOfDay)
   factory TaskModel.fromTimeOfDay({
     String? id,
-    required String title,
-    required String description,
+    required String name,
+    String? desc,
     required TimeOfDay startTime,
     required TimeOfDay endTime,
-    required DateTime date,
-    bool isDone = false,
+    required DateTime taskDate,
+    bool completed = false,
     required String category,
     required Color color,
+    bool oneTime = true,
+    String? importanceType,
   }) {
-    final normalizedDate = DateTime(date.year, date.month, date.day);
+    final normalizedDate = DateTime(
+      taskDate.year,
+      taskDate.month,
+      taskDate.day,
+    );
     return TaskModel(
       id: id,
-      title: title,
-      description: description,
+      name: name,
+      desc: desc,
       startTime: DateTime(
         normalizedDate.year,
         normalizedDate.month,
@@ -94,35 +199,43 @@ class TaskModel extends HiveObject {
         endTime.hour,
         endTime.minute,
       ),
-      date: normalizedDate,
-      isDone: isDone,
+      taskDate: normalizedDate,
+      completed: completed,
       category: category,
       colorValue: color.value,
+      oneTime: oneTime,
+      importanceType: importanceType,
     );
   }
 
-  // Copy with method
   TaskModel copyWith({
-    String? id,
-    String? title,
-    String? description,
+    String? name,
+    String? desc,
+    DateTime? taskDate,
     DateTime? startTime,
     DateTime? endTime,
-    DateTime? date,
-    bool? isDone,
+    bool? completed,
     String? category,
-    Color? color,
+    int? colorValue,
+    bool? oneTime,
+    bool? isDeleted,
+    DateTime? serverUpdatedAt,
+    String? importanceType,
   }) {
     return TaskModel(
-      id: id ?? this.id,
-      title: title ?? this.title,
-      description: description ?? this.description,
+      id: id,
+      name: name ?? this.name,
+      desc: desc ?? this.desc,
+      taskDate: taskDate ?? this.taskDate,
       startTime: startTime ?? this.startTime,
       endTime: endTime ?? this.endTime,
-      date: date ?? this.date,
-      isDone: isDone ?? this.isDone,
+      completed: completed ?? this.completed,
       category: category ?? this.category,
-      colorValue: color?.value ?? colorValue,
+      colorValue: colorValue ?? this.colorValue,
+      oneTime: oneTime ?? this.oneTime,
+      isDeleted: isDeleted ?? this.isDeleted,
+      serverUpdatedAt: serverUpdatedAt ?? DateTime.now().toUtc(),
+      importanceType: importanceType ?? this.importanceType,
     );
   }
 }

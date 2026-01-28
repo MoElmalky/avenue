@@ -3,7 +3,7 @@ import '../../data/models/task_model.dart';
 abstract class TaskLocalDataSource {
   /// Get all tasks for a specific date
   /// Throws [CacheException] if operation fails
-  List<TaskModel> getTasksByDate(DateTime date);
+  Future<List<TaskModel>> getTasksByDate(DateTime date);
 
   /// Add a new task
   /// Throws [CacheException] if operation fails
@@ -20,5 +20,5 @@ abstract class TaskLocalDataSource {
   /// Get a task by ID
   /// Returns null if task not found
   /// Throws [CacheException] if operation fails
-  TaskModel? getTaskById(String id);
+  Future<TaskModel?> getTaskById(String id);
 }
