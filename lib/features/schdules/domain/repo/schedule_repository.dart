@@ -40,4 +40,7 @@ abstract class ScheduleRepository {
 
   /// Delete tasks older than a specific date
   Future<Either<Failure, void>> deleteTasksBefore(DateTime date);
+
+  /// Get date bounds (first and last task dates)
+  Future<Either<Failure, Map<String, DateTime?>>> getDateBounds();
 }

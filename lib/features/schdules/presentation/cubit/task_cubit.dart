@@ -33,6 +33,46 @@ class TaskCubit extends Cubit<TaskState> {
     });
   }
 
+  Future<void> loadDateBounds() async {
+    final result = await repository.getDateBounds();
+    result.fold(
+      (failure) => print("Failed to load date bounds: ${failure.message}"),
+      (bounds) {
+        final currentState = state;
+        final first = bounds['first'];
+        final last = bounds['last'];
+
+        if (currentState is TaskLoaded) {
+          emit(
+            TaskLoaded(
+              currentState.tasks,
+              selectedDate: currentState.selectedDate!,
+              firstTaskDate: first,
+              lastTaskDate: last,
+            ),
+          );
+        } else if (currentState is TaskLoading) {
+          emit(
+            TaskLoading(
+              selectedDate: currentState.selectedDate,
+              firstTaskDate: first,
+              lastTaskDate: last,
+            ),
+          );
+        } else if (currentState is TaskError) {
+          emit(
+            TaskError(
+              currentState.message,
+              selectedDate: currentState.selectedDate,
+              firstTaskDate: first,
+              lastTaskDate: last,
+            ),
+          );
+        }
+      },
+    );
+  }
+
   @override
   Future<void> close() {
     _connectivitySubscription?.cancel();
@@ -56,7 +96,13 @@ class TaskCubit extends Cubit<TaskState> {
     if (date != null) {
       _selectedDate = date;
     }
-    emit(TaskLoading(selectedDate: _selectedDate));
+    emit(
+      TaskLoading(
+        selectedDate: _selectedDate,
+        firstTaskDate: state.firstTaskDate,
+        lastTaskDate: state.lastTaskDate,
+      ),
+    );
 
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
@@ -107,8 +153,14 @@ class TaskCubit extends Cubit<TaskState> {
         : await repository.getDefaultTasks(); // Fetch for Today/Future
 
     result.fold(
-      (failure) =>
-          emit(TaskError(failure.message, selectedDate: _selectedDate)),
+      (failure) => emit(
+        TaskError(
+          failure.message,
+          selectedDate: _selectedDate,
+          firstTaskDate: state.firstTaskDate,
+          lastTaskDate: state.lastTaskDate,
+        ),
+      ),
       (tasks) {
         // Merge default tasks
         final List<TaskModel> allTasks = List.from(tasks);
@@ -120,10 +172,20 @@ class TaskCubit extends Cubit<TaskState> {
             for (var dt in defaultTasks) {
               // Check if default task runs on this weekday
               if (dt.weekdays.contains(_selectedDate.weekday)) {
-                // Determine if we should show this default task
-                // (Simple logic: just show it as a TaskModel instance)
+                // Generate predictable ID for this instance
+                final predictableId = TaskModel.generatePredictableId(
+                  dt.id,
+                  _selectedDate,
+                );
+
+                // Check if this instance is already "crystallized" in the DB
+                if (tasks.any((t) => t.id == predictableId)) {
+                  continue; // Skip adding template, use the one from DB
+                }
+
                 allTasks.add(
                   TaskModel.fromTimeOfDay(
+                    id: predictableId,
                     name: dt.name,
                     desc: dt.desc,
                     startTime: dt.startTime,
@@ -148,27 +210,57 @@ class TaskCubit extends Cubit<TaskState> {
           return a.startTime!.compareTo(b.startTime!);
         });
 
-        emit(TaskLoaded(allTasks, selectedDate: _selectedDate));
+        emit(
+          TaskLoaded(
+            allTasks,
+            selectedDate: _selectedDate,
+            firstTaskDate: state.firstTaskDate,
+            lastTaskDate: state.lastTaskDate,
+          ),
+        );
       },
     );
   }
 
   Future<void> loadFutureTasks() async {
-    emit(const TaskLoading());
+    emit(
+      TaskLoading(
+        firstTaskDate: state.firstTaskDate,
+        lastTaskDate: state.lastTaskDate,
+      ),
+    );
     // Only show tasks that are beyond the next 7 days
     final futureThreshold = DateTime.now().add(const Duration(days: 7));
     final result = await repository.getFutureTasks(futureThreshold);
     result.fold(
-      (failure) => emit(TaskError(failure.message)),
-      (tasks) => emit(FutureTasksLoaded(tasks)),
+      (failure) => emit(
+        TaskError(
+          failure.message,
+          firstTaskDate: state.firstTaskDate,
+          lastTaskDate: state.lastTaskDate,
+        ),
+      ),
+      (tasks) => emit(
+        FutureTasksLoaded(
+          tasks,
+          firstTaskDate: state.firstTaskDate,
+          lastTaskDate: state.lastTaskDate,
+        ),
+      ),
     );
   }
 
   Future<void> addDefaultTask(DefaultTaskModel task) async {
     final result = await repository.addDefaultTask(task);
     result.fold(
-      (failure) =>
-          emit(TaskError(failure.message, selectedDate: _selectedDate)),
+      (failure) => emit(
+        TaskError(
+          failure.message,
+          selectedDate: _selectedDate,
+          firstTaskDate: state.firstTaskDate,
+          lastTaskDate: state.lastTaskDate,
+        ),
+      ),
       (_) {
         if (state is FutureTasksLoaded) {
           loadFutureTasks();
@@ -183,8 +275,14 @@ class TaskCubit extends Cubit<TaskState> {
     final result = await repository.addTask(task);
 
     result.fold(
-      (failure) =>
-          emit(TaskError(failure.message, selectedDate: _selectedDate)),
+      (failure) => emit(
+        TaskError(
+          failure.message,
+          selectedDate: _selectedDate,
+          firstTaskDate: state.firstTaskDate,
+          lastTaskDate: state.lastTaskDate,
+        ),
+      ),
       (_) {
         if (state is FutureTasksLoaded) {
           loadFutureTasks();
@@ -200,8 +298,14 @@ class TaskCubit extends Cubit<TaskState> {
     final result = await repository.updateTask(task);
 
     result.fold(
-      (failure) =>
-          emit(TaskError(failure.message, selectedDate: _selectedDate)),
+      (failure) => emit(
+        TaskError(
+          failure.message,
+          selectedDate: _selectedDate,
+          firstTaskDate: state.firstTaskDate,
+          lastTaskDate: state.lastTaskDate,
+        ),
+      ),
       (_) {
         if (state is FutureTasksLoaded) {
           loadFutureTasks();
@@ -249,7 +353,14 @@ class TaskCubit extends Cubit<TaskState> {
           print("Crystallizing default task: ${task.name}");
           await addTask(task.copyWith(completed: true));
         } else {
-          emit(TaskError(failure.message, selectedDate: _selectedDate));
+          emit(
+            TaskError(
+              failure.message,
+              selectedDate: _selectedDate,
+              firstTaskDate: state.firstTaskDate,
+              lastTaskDate: state.lastTaskDate,
+            ),
+          );
         }
       },
       (_) {

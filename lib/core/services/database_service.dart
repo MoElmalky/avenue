@@ -16,7 +16,7 @@ class DatabaseService {
 
     return await openDatabase(
       path,
-      version: 4, // Increment version
+      version: 5, // Increment version
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -54,6 +54,15 @@ class DatabaseService {
         'ALTER TABLE default_tasks ADD COLUMN is_deleted INTEGER NOT NULL DEFAULT 0',
       );
     }
+    if (oldVersion < 5) {
+      // Add is_dirty column to track local changes for delta sync
+      await db.execute(
+        'ALTER TABLE tasks ADD COLUMN is_dirty INTEGER NOT NULL DEFAULT 0',
+      );
+      await db.execute(
+        'ALTER TABLE default_tasks ADD COLUMN is_dirty INTEGER NOT NULL DEFAULT 0',
+      );
+    }
   }
 
   Future<void> _createDB(Database db, int version) async {
@@ -72,7 +81,8 @@ class DatabaseService {
         one_time INTEGER NOT NULL DEFAULT 1,
         is_deleted INTEGER NOT NULL DEFAULT 0,
         server_updated_at TEXT NOT NULL,
-        importance_type TEXT
+        importance_type TEXT,
+        is_dirty INTEGER NOT NULL DEFAULT 0
       )
     ''');
 
@@ -89,7 +99,8 @@ class DatabaseService {
         weekdays TEXT NOT NULL,
         importance_type TEXT,
         server_updated_at TEXT NOT NULL,
-        is_deleted INTEGER NOT NULL DEFAULT 0
+        is_deleted INTEGER NOT NULL DEFAULT 0,
+        is_dirty INTEGER NOT NULL DEFAULT 0
       )
     ''');
 

@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../cubit/task_cubit.dart';
+import '../cubit/task_state.dart';
 import 'package:line/features/schdules/presentation/views/days_view.dart';
 import 'package:line/features/schdules/presentation/views/schedule_view.dart';
 
@@ -17,6 +20,7 @@ class _PastTasksViewState extends State<PastTasksView> {
   void initState() {
     super.initState();
     _weekOffset = widget.initialOffset;
+    context.read<TaskCubit>().loadDateBounds();
   }
 
   @override
@@ -51,77 +55,94 @@ class _PastTasksViewState extends State<PastTasksView> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: Column(
-        children: [
-          // Navigation Controls
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                IconButton(
-                  onPressed: () {
-                    setState(() {
-                      _weekOffset++;
-                    });
-                  },
-                  icon: const Icon(Icons.arrow_back_ios),
-                  tooltip: "Previous Week",
-                ),
-                Text(
-                  _formatDateRange(startOfRange, endOfRange),
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF004D61),
-                  ),
-                ),
-                IconButton(
-                  onPressed: _weekOffset > 1
-                      ? () {
-                          setState(() {
-                            _weekOffset--;
-                          });
-                        }
-                      : null,
-                  icon: const Icon(Icons.arrow_forward_ios),
-                  tooltip: "Next Week",
-                  color: _weekOffset > 1 ? Colors.black : Colors.grey,
-                ),
-              ],
-            ),
-          ),
+      body: BlocBuilder<TaskCubit, TaskState>(
+        builder: (context, state) {
+          final firstTaskDate = state.firstTaskDate;
+          final canGoBack =
+              firstTaskDate == null || startOfRange.isAfter(firstTaskDate);
 
-          // Days List
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              itemCount: days.length,
-              itemBuilder: (context, index) {
-                // Determine logic: show latest first or oldest first?
-                // Usually timeline is newest at top?
-                // days array is Oldest -> Newest (startOfRange -> endOfRange)
-                // Let's reverse display so newest day is at top
-                final day = days[6 - index]; // 6, 5, 4... 0
-
-                return DayCard(
-                  day: day,
-                  isToday: false,
-                  isPast: true,
-                  isFuture: false,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => HomeView(selectedDate: day),
+          return Column(
+            children: [
+              // Navigation Controls
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 10,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    IconButton(
+                      onPressed: canGoBack
+                          ? () {
+                              setState(() {
+                                _weekOffset++;
+                              });
+                            }
+                          : null,
+                      icon: const Icon(Icons.arrow_back_ios),
+                      tooltip: "Previous Week",
+                      color: canGoBack ? Colors.black : Colors.grey,
+                    ),
+                    Text(
+                      _formatDateRange(startOfRange, endOfRange),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF004D61),
                       ),
+                    ),
+                    IconButton(
+                      onPressed: _weekOffset > 1
+                          ? () {
+                              setState(() {
+                                _weekOffset--;
+                              });
+                            }
+                          : null,
+                      icon: const Icon(Icons.arrow_forward_ios),
+                      tooltip: "Next Week",
+                      color: _weekOffset > 1 ? Colors.black : Colors.grey,
+                    ),
+                  ],
+                ),
+              ),
+
+              // Days List
+              Expanded(
+                child: ListView.builder(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 10,
+                  ),
+                  itemCount: days.length,
+                  itemBuilder: (context, index) {
+                    // Determine logic: show latest first or oldest first?
+                    // Usually timeline is newest at top?
+                    // days array is Oldest -> Newest (startOfRange -> endOfRange)
+                    // Let's reverse display so newest day is at top
+                    final day = days[6 - index]; // 6, 5, 4... 0
+
+                    return DayCard(
+                      day: day,
+                      isToday: false,
+                      isPast: true,
+                      isFuture: false,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => HomeView(selectedDate: day),
+                          ),
+                        );
+                      },
                     );
                   },
-                );
-              },
-            ),
-          ),
-        ],
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

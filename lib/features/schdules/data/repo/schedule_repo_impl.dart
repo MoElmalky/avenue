@@ -128,4 +128,16 @@ class ScheduleRepositoryImpl implements ScheduleRepository {
       return Left(CacheFailure('حدث خطأ غير متوقع'));
     }
   }
+
+  @override
+  Future<Either<Failure, Map<String, DateTime?>>> getDateBounds() async {
+    try {
+      final bounds = await localDataSource.getDateBounds();
+      return Right(bounds);
+    } on CacheException catch (e) {
+      return Left(CacheFailure(e.message));
+    } catch (e) {
+      return Left(CacheFailure('Failed to get date bounds'));
+    }
+  }
 }

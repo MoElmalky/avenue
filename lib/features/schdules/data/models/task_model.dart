@@ -15,6 +15,7 @@ class TaskModel {
   final bool isDeleted;
   final DateTime serverUpdatedAt;
   final String? importanceType;
+  final bool isDirty;
 
   TaskModel({
     String? id,
@@ -30,6 +31,7 @@ class TaskModel {
     bool? isDeleted,
     DateTime? serverUpdatedAt,
     this.importanceType,
+    this.isDirty = false,
   }) : id = id ?? const Uuid().v4(),
        oneTime = oneTime ?? true,
        isDeleted = isDeleted ?? false,
@@ -51,6 +53,7 @@ class TaskModel {
       'is_deleted': isDeleted ? 1 : 0,
       'server_updated_at': serverUpdatedAt.toIso8601String(),
       'importance_type': importanceType,
+      'is_dirty': isDirty ? 1 : 0,
     };
   }
 
@@ -77,6 +80,7 @@ class TaskModel {
             DateTime.now().toIso8601String(),
       ),
       importanceType: map['importance_type'],
+      isDirty: (map['is_dirty'] ?? 0) == 1,
     );
   }
 
@@ -221,6 +225,7 @@ class TaskModel {
     bool? isDeleted,
     DateTime? serverUpdatedAt,
     String? importanceType,
+    bool? isDirty,
   }) {
     return TaskModel(
       id: id,
@@ -236,6 +241,17 @@ class TaskModel {
       isDeleted: isDeleted ?? this.isDeleted,
       serverUpdatedAt: serverUpdatedAt ?? DateTime.now().toUtc(),
       importanceType: importanceType ?? this.importanceType,
+      isDirty: isDirty ?? this.isDirty,
+    );
+  }
+
+  /// Generates a deterministic UUID v5 ID for a daily instance of a default task.
+  /// This ensures that the same default task on the same day always has the same ID.
+  static String generatePredictableId(String defaultTaskId, DateTime date) {
+    final dateStr = date.toIso8601String().split('T')[0]; // YYYY-MM-DD
+    return const Uuid().v5(
+      Uuid.NAMESPACE_URL,
+      "default_${defaultTaskId}_$dateStr",
     );
   }
 }

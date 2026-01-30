@@ -165,4 +165,33 @@ class TaskLocalDataSourceImpl implements TaskLocalDataSource {
       throw CacheException('Failed to delete old tasks');
     }
   }
+
+  @override
+  Future<Map<String, DateTime?>> getDateBounds() async {
+    try {
+      final db = await databaseService.database;
+      final result = await db.rawQuery(
+        'SELECT MIN(task_date) as first_date, MAX(task_date) as last_date FROM tasks WHERE is_deleted = 0',
+      );
+
+      DateTime? firstDate;
+      DateTime? lastDate;
+
+      if (result.isNotEmpty) {
+        final firstDateStr = result.first['first_date'] as String?;
+        final lastDateStr = result.first['last_date'] as String?;
+
+        if (firstDateStr != null) {
+          firstDate = DateTime.parse(firstDateStr);
+        }
+        if (lastDateStr != null) {
+          lastDate = DateTime.parse(lastDateStr);
+        }
+      }
+
+      return {'first': firstDate, 'last': lastDate};
+    } catch (e) {
+      throw CacheException('Failed to get date bounds');
+    }
+  }
 }

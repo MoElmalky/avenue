@@ -53,6 +53,17 @@ class _HomeViewState extends State<HomeView> {
               ),
         actions: [
           IconButton(
+            icon: const Icon(Icons.calendar_today),
+            onPressed: () {
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (context) => AddTaskView(initialDate: _date),
+              );
+            },
+          ),
+          IconButton(
             icon: const Icon(Icons.sync),
             onPressed: () {
               context.read<TaskCubit>().syncTasks();

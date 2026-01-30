@@ -3,42 +3,67 @@ import '../../data/models/task_model.dart';
 
 abstract class TaskState extends Equatable {
   final DateTime? selectedDate;
-  const TaskState({this.selectedDate});
+  final DateTime? firstTaskDate;
+  final DateTime? lastTaskDate;
+
+  const TaskState({this.selectedDate, this.firstTaskDate, this.lastTaskDate});
 
   @override
-  List<Object?> get props => [selectedDate];
+  List<Object?> get props => [selectedDate, firstTaskDate, lastTaskDate];
 }
 
 class TaskInitial extends TaskState {}
 
 class TaskLoading extends TaskState {
-  const TaskLoading({super.selectedDate});
+  const TaskLoading({
+    super.selectedDate,
+    super.firstTaskDate,
+    super.lastTaskDate,
+  });
 }
 
 class TaskLoaded extends TaskState {
   final List<TaskModel> tasks;
 
-  const TaskLoaded(this.tasks, {required DateTime selectedDate})
-    : super(selectedDate: selectedDate);
+  const TaskLoaded(
+    this.tasks, {
+    required DateTime super.selectedDate,
+    super.firstTaskDate,
+    super.lastTaskDate,
+  });
 
   @override
-  List<Object?> get props => [tasks, selectedDate];
+  List<Object?> get props => [tasks, selectedDate, firstTaskDate, lastTaskDate];
 }
 
 class TaskError extends TaskState {
   final String message;
 
-  const TaskError(this.message, {super.selectedDate});
+  const TaskError(
+    this.message, {
+    super.selectedDate,
+    super.firstTaskDate,
+    super.lastTaskDate,
+  });
 
   @override
-  List<Object?> get props => [message, selectedDate];
+  List<Object?> get props => [
+    message,
+    selectedDate,
+    firstTaskDate,
+    lastTaskDate,
+  ];
 }
 
 class FutureTasksLoaded extends TaskState {
   final List<TaskModel> tasks;
 
-  const FutureTasksLoaded(this.tasks);
+  const FutureTasksLoaded(
+    this.tasks, {
+    super.firstTaskDate,
+    super.lastTaskDate,
+  });
 
   @override
-  List<Object?> get props => [tasks];
+  List<Object?> get props => [tasks, firstTaskDate, lastTaskDate];
 }

@@ -38,7 +38,7 @@ class SyncService {
       final userId = user.id;
       final db = await databaseService.database;
 
-      // Get last sync timestamp from settings table
+      // Get last sync watermark
       final List<Map<String, dynamic>> settings = await db.query(
         'settings',
         where: 'key = ?',
@@ -51,23 +51,29 @@ class SyncService {
           : DateTime.fromMillisecondsSinceEpoch(0).toUtc();
 
       print(
-        "SyncService: Starting delta sync for user $userId. Last sync: $lastSync",
+        "SyncService: Starting optimized sync for user $userId. Last sync: $lastSync",
       );
 
-      // 1. Pull changes from Supabase (Remote -> Local)
-      final response = await supabase
+      // --- 1. SYNC TASKS ---
+      // 1.1 Pull remote changes (Remote -> Local)
+      final remoteTasksData = await supabase
           .from('tasks')
           .select()
           .eq('user_id', userId)
           .gt('server_updated_at', lastSync.toIso8601String());
 
-      final remoteData = response as List<dynamic>;
-      int pullCount = 0;
+      final List<dynamic> remoteTasksList = remoteTasksData as List<dynamic>;
+      int pulledTasksCount = 0;
+      DateTime maxTaskWatermark = lastSync;
 
-      for (final json in remoteData) {
+      for (final json in remoteTasksList) {
         final remoteTask = TaskModel.fromSupabaseJson(json);
+        // Track the newest change from server
+        if (remoteTask.serverUpdatedAt.isAfter(maxTaskWatermark)) {
+          maxTaskWatermark = remoteTask.serverUpdatedAt;
+        }
 
-        // Check local version
+        // Check local state
         final List<Map<String, dynamic>> localMaps = await db.query(
           'tasks',
           where: 'id = ?',
@@ -75,116 +81,127 @@ class SyncService {
         );
 
         if (localMaps.isEmpty) {
-          await db.insert('tasks', remoteTask.toMap());
-          pullCount++;
+          // New task from server, ensure is_dirty = 0
+          await db.insert('tasks', remoteTask.copyWith(isDirty: false).toMap());
+          pulledTasksCount++;
         } else {
           final localTask = TaskModel.fromMap(localMaps.first);
+          // Only update if server has a newer version
           if (remoteTask.serverUpdatedAt.isAfter(localTask.serverUpdatedAt)) {
             await db.update(
               'tasks',
-              remoteTask.toMap(),
+              remoteTask.copyWith(isDirty: false).toMap(),
               where: 'id = ?',
               whereArgs: [remoteTask.id],
             );
-            pullCount++;
+            pulledTasksCount++;
           }
         }
       }
 
-      // 2. Push local changes to Supabase (Local -> Remote)
-      final List<Map<String, dynamic>> localChangesMaps = await db.query(
+      // 1.2 Push local changes (Local -> Remote)
+      final List<Map<String, dynamic>> localDirtyTasks = await db.query(
         'tasks',
-        where: 'server_updated_at > ?',
-        whereArgs: [lastSync.toIso8601String()],
+        where: 'is_dirty = 1',
       );
 
-      final localChanges = localChangesMaps
-          .map((m) => TaskModel.fromMap(m))
-          .toList();
+      if (localDirtyTasks.isNotEmpty) {
+        final tasksToPush = localDirtyTasks
+            .map((m) => TaskModel.fromMap(m).toSupabaseJson(userId))
+            .toList();
 
-      int pushCount = 0;
-      for (final task in localChanges) {
-        await _pushToRemote(task, userId);
-        pushCount++;
+        await supabase.from('tasks').upsert(tasksToPush);
+
+        // Clear is_dirty for pushed tasks
+        await db.update(
+          'tasks',
+          {'is_dirty': 0},
+          where:
+              'id IN (${localDirtyTasks.map((e) => "'${e['id']}'").join(',')})',
+        );
       }
 
-      // 4. Sync Default Tasks
-      await _syncDefaultTasks(db, userId, lastSync);
+      // --- 2. SYNC DEFAULT TASKS ---
+      // 2.1 Pull remote changes
+      final remoteDefaultTasksData = await supabase
+          .from('default_tasks')
+          .select()
+          .eq('user_id', userId)
+          .gt('server_updated_at', lastSync.toIso8601String());
 
-      // 5. Update last sync timestamp
-      final now = DateTime.now().toUtc().toIso8601String();
+      final List<dynamic> remoteDefaultTasksList =
+          remoteDefaultTasksData as List<dynamic>;
+      int pulledDefaultCount = 0;
+
+      for (final json in remoteDefaultTasksList) {
+        final remoteTask = DefaultTaskModel.fromSupabaseJson(json);
+        if (remoteTask.serverUpdatedAt.isAfter(maxTaskWatermark)) {
+          maxTaskWatermark = remoteTask.serverUpdatedAt;
+        }
+
+        final List<Map<String, dynamic>> localMaps = await db.query(
+          'default_tasks',
+          where: 'id = ?',
+          whereArgs: [remoteTask.id],
+        );
+
+        if (localMaps.isEmpty) {
+          await db.insert(
+            'default_tasks',
+            remoteTask.copyWith(isDirty: false).toMap(),
+          );
+          pulledDefaultCount++;
+        } else {
+          final localTask = DefaultTaskModel.fromMap(localMaps.first);
+          if (remoteTask.serverUpdatedAt.isAfter(localTask.serverUpdatedAt)) {
+            await db.update(
+              'default_tasks',
+              remoteTask.copyWith(isDirty: false).toMap(),
+              where: 'id = ?',
+              whereArgs: [remoteTask.id],
+            );
+            pulledDefaultCount++;
+          }
+        }
+      }
+
+      // 2.2 Push local changes
+      final List<Map<String, dynamic>> localDirtyDefaults = await db.query(
+        'default_tasks',
+        where: 'is_dirty = 1',
+      );
+
+      if (localDirtyDefaults.isNotEmpty) {
+        final defaultsToPush = localDirtyDefaults
+            .map((m) => DefaultTaskModel.fromMap(m).toSupabaseJson(userId))
+            .toList();
+
+        await supabase.from('default_tasks').upsert(defaultsToPush);
+
+        // Clear is_dirty
+        await db.update(
+          'default_tasks',
+          {'is_dirty': 0},
+          where:
+              'id IN (${localDirtyDefaults.map((e) => "'${e['id']}'").join(',')})',
+        );
+      }
+
+      // Update watermark to the newest data seen from server OR now if we pushed anything
+      // Using maxTaskWatermark ensures we don't skip server changes even if clocks drift
+      final newWatermark = maxTaskWatermark.toIso8601String();
       await db.insert('settings', {
         'key': lastSyncKey,
-        'value': now,
+        'value': newWatermark,
       }, conflictAlgorithm: ConflictAlgorithm.replace);
 
       print(
-        "SyncService: Delta sync completed. Pulled: $pullCount, Pushed: $pushCount",
+        "SyncService: Sync completed. Pulled Tasks: $pulledTasksCount, Pulled Defaults: $pulledDefaultCount, Pushed Tasks: ${localDirtyTasks.length}",
       );
     } catch (e) {
-      print("SyncService: Error during delta sync: $e");
+      print("SyncService: Error during sync: $e");
       rethrow;
     }
-  }
-
-  Future<void> _syncDefaultTasks(
-    Database db,
-    String userId,
-    DateTime lastSync,
-  ) async {
-    print("SyncService: Syncing default tasks...");
-    // 1. Pull changes
-    final response = await supabase
-        .from('default_tasks')
-        .select()
-        .eq('user_id', userId)
-        .gt('server_updated_at', lastSync.toIso8601String());
-
-    final remoteData = response as List<dynamic>;
-    for (final json in remoteData) {
-      final remoteTask = DefaultTaskModel.fromSupabaseJson(json);
-
-      final List<Map<String, dynamic>> localMaps = await db.query(
-        'default_tasks',
-        where: 'id = ?',
-        whereArgs: [remoteTask.id],
-      );
-
-      if (localMaps.isEmpty) {
-        await db.insert('default_tasks', remoteTask.toMap());
-      } else {
-        final localTask = DefaultTaskModel.fromMap(localMaps.first);
-        if (remoteTask.serverUpdatedAt.isAfter(localTask.serverUpdatedAt)) {
-          await db.update(
-            'default_tasks',
-            remoteTask.toMap(),
-            where: 'id = ?',
-            whereArgs: [remoteTask.id],
-          );
-        }
-      }
-    }
-
-    // 2. Push changes
-    final List<Map<String, dynamic>> localChangesMaps = await db.query(
-      'default_tasks',
-      where: 'server_updated_at > ?',
-      whereArgs: [lastSync.toIso8601String()],
-    );
-
-    final localChanges = localChangesMaps
-        .map((m) => DefaultTaskModel.fromMap(m))
-        .toList();
-    for (final task in localChanges) {
-      final json = task.toSupabaseJson(userId);
-      await supabase.from('default_tasks').upsert(json);
-    }
-  }
-
-  Future<void> _pushToRemote(TaskModel task, String userId) async {
-    final json = task.toSupabaseJson(userId);
-    print("SyncService: Pushing task to remote: $json");
-    await supabase.from('tasks').upsert(json);
   }
 
   Future<void> fetchTasksForDateRange(DateTime start, DateTime end) async {

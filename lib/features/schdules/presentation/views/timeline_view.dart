@@ -36,6 +36,22 @@ class _TimelineViewState extends State<TimelineView> {
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.calendar_today),
+            onPressed: () {
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (context) => AddTaskView(
+                  initialDate: widget.selectedDate,
+                  disableRecurring: true,
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: BlocBuilder<TaskCubit, TaskState>(
         builder: (context, state) {
@@ -59,31 +75,7 @@ class _TimelineViewState extends State<TimelineView> {
           return const SizedBox.shrink();
         },
       ),
-      floatingActionButton: _isNotToday(widget.selectedDate)
-          ? null
-          : FloatingActionButton(
-              onPressed: () {
-                showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  backgroundColor: Colors.transparent,
-                  builder: (context) => AddTaskView(
-                    initialDate: widget.selectedDate,
-                    disableRecurring: true,
-                  ),
-                );
-              },
-              backgroundColor: const Color(0xFF004D61),
-              child: const Icon(Icons.add, color: Colors.white),
-            ),
     );
-  }
-
-  bool _isNotToday(DateTime date) {
-    final now = DateTime.now();
-    return date.year != now.year ||
-        date.month != now.month ||
-        date.day != now.day;
   }
 }
 

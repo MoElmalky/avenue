@@ -14,6 +14,7 @@ class DefaultTaskModel {
 
   final DateTime serverUpdatedAt;
   final bool isDeleted;
+  final bool isDirty;
 
   DefaultTaskModel({
     String? id,
@@ -27,6 +28,7 @@ class DefaultTaskModel {
     this.importanceType,
     DateTime? serverUpdatedAt,
     this.isDeleted = false,
+    this.isDirty = false,
   }) : id = id ?? const Uuid().v4(),
        serverUpdatedAt = serverUpdatedAt ?? DateTime.now().toUtc();
 
@@ -41,6 +43,7 @@ class DefaultTaskModel {
     String? importanceType,
     DateTime? serverUpdatedAt,
     bool? isDeleted,
+    bool? isDirty,
   }) {
     return DefaultTaskModel(
       id: id,
@@ -54,6 +57,7 @@ class DefaultTaskModel {
       importanceType: importanceType ?? this.importanceType,
       serverUpdatedAt: serverUpdatedAt ?? this.serverUpdatedAt,
       isDeleted: isDeleted ?? this.isDeleted,
+      isDirty: isDirty ?? this.isDirty,
     );
   }
 
@@ -71,6 +75,7 @@ class DefaultTaskModel {
       'importance_type': importanceType,
       'server_updated_at': serverUpdatedAt.toIso8601String(),
       'is_deleted': isDeleted ? 1 : 0,
+      'is_dirty': isDirty ? 1 : 0,
     };
   }
 
@@ -95,6 +100,7 @@ class DefaultTaskModel {
       importanceType: map['importance_type'],
       serverUpdatedAt: DateTime.parse(map['server_updated_at']),
       isDeleted: map['is_deleted'] == 1,
+      isDirty: (map['is_dirty'] ?? 0) == 1,
     );
   }
 
