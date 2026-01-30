@@ -6,6 +6,8 @@ import 'package:line/features/schdules/presentation/views/schedule_view.dart';
 import 'package:line/features/schdules/presentation/views/add_task_view.dart';
 import 'package:line/features/schdules/presentation/views/future_tasks_view.dart';
 import 'package:line/features/schdules/presentation/views/past_tasks_view.dart';
+import 'package:go_router/go_router.dart';
+import 'package:line/core/utils/routes.dart';
 
 class DaysView extends StatefulWidget {
   const DaysView({super.key});
@@ -48,6 +50,12 @@ class _DaysViewState extends State<DaysView> {
         elevation: 0,
         leading: IconButton(icon: const Icon(Icons.menu), onPressed: () {}),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.auto_awesome, color: Color(0xFF004D61)),
+            onPressed: () {
+              context.push(AppRoutes.aiChat);
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.calendar_today),
             onPressed: () {
