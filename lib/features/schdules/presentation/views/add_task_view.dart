@@ -2,13 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:line/core/utils/validation.dart';
 import '../../data/models/task_model.dart';
+import '../../data/models/default_task_model.dart';
 import '../cubit/task_cubit.dart';
 import '../cubit/task_state.dart';
 
 class AddTaskView extends StatefulWidget {
   final TaskModel? task;
   final DateTime? initialDate;
-  const AddTaskView({super.key, this.task, this.initialDate});
+  final bool disableRecurring;
+  const AddTaskView({
+    super.key,
+    this.task,
+    this.initialDate,
+    this.disableRecurring = false,
+  });
 
   @override
   State<AddTaskView> createState() => _AddTaskViewState();
@@ -18,6 +25,7 @@ class _AddTaskViewState extends State<AddTaskView> {
   late String _selectedImportance;
   late String _selectedCategory;
   late final TextEditingController _titleController;
+  late final TextEditingController _descController; // New
   late final TextEditingController _startTimeController;
   late final TextEditingController _endTimeController;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
@@ -26,6 +34,11 @@ class _AddTaskViewState extends State<AddTaskView> {
   TimeOfDay? _startTime;
   TimeOfDay? _endTime;
 
+  // New state
+  bool _isRecurring = false;
+  List<int> _selectedWeekdays = [];
+  DateTime? _selectedDate;
+
   @override
   void initState() {
     super.initState();
@@ -33,8 +46,13 @@ class _AddTaskViewState extends State<AddTaskView> {
     _selectedImportance = task?.importanceType ?? 'Medium';
     _selectedCategory = task?.category ?? 'Meeting';
     _titleController = TextEditingController(text: task?.name);
+    _descController = TextEditingController(text: task?.desc); // New
     _startTime = task?.startTimeOfDay;
     _endTime = task?.endTimeOfDay;
+    _selectedDate =
+        task?.taskDate ??
+        widget.initialDate ??
+        DateTime.now(); // Initialize date
 
     String formatTime(TimeOfDay? time) {
       if (time == null) return '';
@@ -117,6 +135,111 @@ class _AddTaskViewState extends State<AddTaskView> {
                 ),
               ),
               const SizedBox(height: 20),
+
+              // Description
+              _buildLabel('Description', isRequired: false),
+              const SizedBox(height: 8),
+              TextFormField(
+                controller: _descController,
+                maxLines: 3,
+                decoration: InputDecoration(
+                  hintText: 'Enter description',
+                  hintStyle: TextStyle(color: Colors.grey.shade400),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.grey.shade300),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.grey.shade300),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Task Type Toggle (Only for new tasks or non-edited specific tasks)
+              if (widget.task == null && !widget.disableRecurring) ...[
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildTypeToggle(
+                        'Specific Date',
+                        !_isRecurring,
+                        () {
+                          setState(() => _isRecurring = false);
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildTypeToggle('Recurring', _isRecurring, () {
+                        setState(() => _isRecurring = true);
+                      }),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+              ],
+
+              if (!_isRecurring) ...[
+                _buildLabel('Date'),
+                const SizedBox(height: 8),
+                InkWell(
+                  onTap: widget.disableRecurring
+                      ? null
+                      : () async {
+                          final date = await showDatePicker(
+                            context: context,
+                            initialDate: _selectedDate ?? DateTime.now(),
+                            firstDate: DateTime.now(),
+                            lastDate: DateTime.now().add(
+                              const Duration(days: 365 * 2),
+                            ),
+                          );
+                          if (date != null) {
+                            setState(() => _selectedDate = date);
+                          }
+                        },
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.shade300),
+                      borderRadius: BorderRadius.circular(12),
+                      color: widget.disableRecurring
+                          ? Colors.grey.shade100
+                          : null,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          _selectedDate != null
+                              ? "${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}"
+                              : "Select Date",
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: widget.disableRecurring
+                                ? Colors.grey
+                                : Colors.black,
+                          ),
+                        ),
+                        if (!widget.disableRecurring)
+                          const Icon(Icons.calendar_today, color: Colors.grey),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+              ] else ...[
+                _buildLabel('Weekdays'),
+                const SizedBox(height: 8),
+                _buildWeekdaySelector(),
+                const SizedBox(height: 20),
+              ],
 
               // Time Selection
               Row(
@@ -347,111 +470,130 @@ class _AddTaskViewState extends State<AddTaskView> {
                         });
 
                         if (_formKey.currentState!.validate()) {
-                          final taskDate =
-                              widget.task?.taskDate ??
-                              widget.initialDate ??
-                              DateTime.now();
-
-                          final task = TaskModel.fromTimeOfDay(
-                            id: widget.task?.id,
-                            name: _titleController.text,
-                            desc: widget.task?.desc ?? '',
-                            startTime: _startTime!,
-                            endTime: _endTime!,
-                            taskDate: taskDate,
-                            category: _selectedCategory,
-                            color: _getCategoryColor(_selectedCategory),
-                            completed: widget.task?.completed ?? false,
-                            importanceType: _selectedImportance,
-                          );
-
-                          final state = context.read<TaskCubit>().state;
-                          int maxConcurrentWithNew = 1; // The new task itself
-                          bool hasAnyOverlap = false;
-
-                          if (state is TaskLoaded) {
-                            final otherTasks = state.tasks
-                                .where((t) => t.id != task.id)
-                                .toList();
-
-                            // 1. Check if the new task overlaps with any existing task
-                            List<TaskModel> overlappingWithNew = [];
-                            for (var existing in otherTasks) {
-                              if (_tasksOverlap(task, existing)) {
-                                hasAnyOverlap = true;
-                                overlappingWithNew.add(existing);
-                              }
-                            }
-
-                            // 2. For each task that overlaps with the new one,
-                            // check if it also overlaps with another task that overlaps with the new one.
-                            if (overlappingWithNew.isNotEmpty) {
-                              maxConcurrentWithNew = 2; // At least one overlap
-                              for (
-                                int i = 0;
-                                i < overlappingWithNew.length;
-                                i++
-                              ) {
-                                for (
-                                  int j = i + 1;
-                                  j < overlappingWithNew.length;
-                                  j++
-                                ) {
-                                  if (_tasksOverlap(
-                                    overlappingWithNew[i],
-                                    overlappingWithNew[j],
-                                  )) {
-                                    // Found a point where the new task, task i, and task j all overlap
-                                    maxConcurrentWithNew = 3;
-                                    break;
-                                  }
-                                }
-                                if (maxConcurrentWithNew >= 3) break;
-                              }
-                            }
-                          }
-
-                          if (maxConcurrentWithNew >= 3) {
-                            showDialog(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                title: const Text('Too Many Tasks'),
-                                content: const Text(
-                                  'You cannot have more than 2 tasks at the same time. Please adjust the timing.',
+                          if (_isRecurring) {
+                            if (_selectedWeekdays.isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Please select at least one weekday',
+                                  ),
                                 ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(context),
-                                    child: const Text('OK'),
-                                  ),
-                                ],
-                              ),
-                            );
-                          } else if (hasAnyOverlap) {
-                            showDialog(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                title: const Text('Task Overlap'),
-                                content: const Text(
-                                  'This task overlaps with another task. Do you want to continue?',
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(context),
-                                    child: const Text('Cancel'),
-                                  ),
-                                  TextButton(
-                                    onPressed: () {
-                                      Navigator.pop(context);
-                                      _saveTask(task);
-                                    },
-                                    child: const Text('Continue'),
-                                  ),
-                                ],
-                              ),
-                            );
+                              );
+                              return;
+                            }
+                            _saveDefaultTask();
                           } else {
-                            _saveTask(task);
+                            // Specific Task Logic
+                            final task = TaskModel.fromTimeOfDay(
+                              id: widget.task?.id,
+                              name: _titleController.text,
+                              desc: _descController.text,
+                              startTime: _startTime!,
+                              endTime: _endTime!,
+                              taskDate:
+                                  widget.task?.taskDate ??
+                                  _selectedDate ??
+                                  DateTime.now(),
+                              category: _selectedCategory,
+                              color: _getCategoryColor(_selectedCategory),
+                              completed: widget.task?.completed ?? false,
+                              importanceType: _selectedImportance,
+                              oneTime: true,
+                            );
+
+                            // Check overlapping
+                            final state = context.read<TaskCubit>().state;
+                            if (state is TaskLoaded) {
+                              bool hasAnyOverlap = false;
+                              int maxConcurrentWithNew = 1;
+
+                              // Filter other tasks for the same day
+                              final otherTasks = state.tasks.where((t) {
+                                final dateMatch =
+                                    t.taskDate.year == task.taskDate.year &&
+                                    t.taskDate.month == task.taskDate.month &&
+                                    t.taskDate.day == task.taskDate.day;
+                                return dateMatch && t.id != task.id;
+                              }).toList();
+
+                              List<TaskModel> overlappingWithNew = [];
+                              for (var existing in otherTasks) {
+                                if (_tasksOverlap(task, existing)) {
+                                  hasAnyOverlap = true;
+                                  overlappingWithNew.add(existing);
+                                }
+                              }
+
+                              if (overlappingWithNew.isNotEmpty) {
+                                maxConcurrentWithNew = 2;
+                                for (
+                                  int i = 0;
+                                  i < overlappingWithNew.length;
+                                  i++
+                                ) {
+                                  for (
+                                    int j = i + 1;
+                                    j < overlappingWithNew.length;
+                                    j++
+                                  ) {
+                                    if (_tasksOverlap(
+                                      overlappingWithNew[i],
+                                      overlappingWithNew[j],
+                                    )) {
+                                      maxConcurrentWithNew = 3;
+                                      break;
+                                    }
+                                  }
+                                  if (maxConcurrentWithNew >= 3) break;
+                                }
+                              }
+
+                              if (maxConcurrentWithNew >= 3) {
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    title: const Text('Too Many Tasks'),
+                                    content: const Text(
+                                      'You cannot have more than 2 tasks at the same time.',
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(context),
+                                        child: const Text('OK'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              } else if (hasAnyOverlap) {
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    title: const Text('Task Overlap'),
+                                    content: const Text(
+                                      'This task overlaps with another task. Continue?',
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(context),
+                                        child: const Text('Cancel'),
+                                      ),
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.pop(context);
+                                          _saveSpecificTask(task);
+                                        },
+                                        child: const Text('Continue'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              } else {
+                                _saveSpecificTask(task);
+                              }
+                            } else {
+                              // Fallback if state is not loaded (e.g. from future view?)
+                              _saveSpecificTask(task);
+                            }
                           }
                         }
                       },
@@ -484,7 +626,7 @@ class _AddTaskViewState extends State<AddTaskView> {
     );
   }
 
-  void _saveTask(TaskModel task) {
+  void _saveSpecificTask(TaskModel task) {
     if (widget.task == null) {
       context.read<TaskCubit>().addTask(task);
     } else {
@@ -543,5 +685,81 @@ class _AddTaskViewState extends State<AddTaskView> {
       default:
         return Colors.blue;
     }
+  }
+
+  void _saveDefaultTask() {
+    final defaultTask = DefaultTaskModel(
+      name: _titleController.text,
+      desc: _descController.text,
+      startTime: _startTime!,
+      endTime: _endTime!,
+      category: _selectedCategory,
+      colorValue: _getCategoryColor(_selectedCategory).value,
+      weekdays: _selectedWeekdays,
+      importanceType: _selectedImportance,
+    );
+    context.read<TaskCubit>().addDefaultTask(defaultTask);
+    Navigator.pop(context);
+  }
+
+  Widget _buildTypeToggle(String label, bool isSelected, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF004D61) : Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.white : Colors.grey.shade700,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWeekdaySelector() {
+    final days = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: List.generate(7, (index) {
+        final dayIndex = index + 1; // 1 = Monday
+        final isSelected = _selectedWeekdays.contains(dayIndex);
+        return GestureDetector(
+          onTap: () {
+            setState(() {
+              if (isSelected) {
+                _selectedWeekdays.remove(dayIndex);
+              } else {
+                _selectedWeekdays.add(dayIndex);
+              }
+            });
+          },
+          child: Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: isSelected
+                  ? const Color(0xFF004D61)
+                  : Colors.grey.shade200,
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              days[index],
+              style: TextStyle(
+                color: isSelected ? Colors.white : Colors.black87,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        );
+      }),
+    );
   }
 }

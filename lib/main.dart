@@ -10,6 +10,7 @@ import 'package:line/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:sqlite3/open.dart';
+import 'package:line/features/schdules/domain/repo/schedule_repository.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -30,6 +31,15 @@ void main() async {
 
   // Initialize all dependencies (Hive, repositories, etc.)
   await initializeDependencies();
+
+  // Prune old tasks (keep 1 week history locally)
+  try {
+    final retentionDate = DateTime.now().subtract(const Duration(days: 7));
+    await sl<ScheduleRepository>().deleteTasksBefore(retentionDate);
+    print("Pruned local tasks older than $retentionDate");
+  } catch (e) {
+    print("Failed to prune old tasks: $e");
+  }
 
   runApp(const Line());
 }

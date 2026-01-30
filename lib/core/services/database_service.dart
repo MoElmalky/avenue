@@ -16,7 +16,7 @@ class DatabaseService {
 
     return await openDatabase(
       path,
-      version: 2,
+      version: 4, // Increment version
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -27,6 +27,32 @@ class DatabaseService {
       // For this migration, we'll drop and recreate to ensure clean schema alignment
       await db.execute('DROP TABLE IF EXISTS tasks');
       await _createDB(db, newVersion);
+    }
+    if (oldVersion < 3) {
+      // Add default_tasks table
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS default_tasks (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          desc TEXT,
+          start_time TEXT NOT NULL,
+          end_time TEXT NOT NULL,
+          category TEXT NOT NULL,
+          color_value INTEGER NOT NULL,
+          weekdays TEXT NOT NULL,
+          importance_type TEXT,
+          server_updated_at TEXT NOT NULL DEFAULT '', 
+          is_deleted INTEGER NOT NULL DEFAULT 0
+        )
+      ''');
+    } else if (oldVersion < 4) {
+      // Add missing sync columns if already on v3
+      await db.execute(
+        'ALTER TABLE default_tasks ADD COLUMN server_updated_at TEXT NOT NULL DEFAULT ""',
+      );
+      await db.execute(
+        'ALTER TABLE default_tasks ADD COLUMN is_deleted INTEGER NOT NULL DEFAULT 0',
+      );
     }
   }
 
@@ -47,6 +73,23 @@ class DatabaseService {
         is_deleted INTEGER NOT NULL DEFAULT 0,
         server_updated_at TEXT NOT NULL,
         importance_type TEXT
+      )
+    ''');
+
+    // Default Tasks Table (Recurring)
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS default_tasks (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        desc TEXT,
+        start_time TEXT NOT NULL,
+        end_time TEXT NOT NULL,
+        category TEXT NOT NULL,
+        color_value INTEGER NOT NULL,
+        weekdays TEXT NOT NULL,
+        importance_type TEXT,
+        server_updated_at TEXT NOT NULL,
+        is_deleted INTEGER NOT NULL DEFAULT 0
       )
     ''');
 

@@ -33,3 +33,12 @@ class TaskError extends TaskState {
   @override
   List<Object?> get props => [message, selectedDate];
 }
+
+class FutureTasksLoaded extends TaskState {
+  final List<TaskModel> tasks;
+
+  const FutureTasksLoaded(this.tasks);
+
+  @override
+  List<Object?> get props => [tasks];
+}

@@ -59,7 +59,7 @@ class _TimelineViewState extends State<TimelineView> {
           return const SizedBox.shrink();
         },
       ),
-      floatingActionButton: _isPastDate(widget.selectedDate)
+      floatingActionButton: _isNotToday(widget.selectedDate)
           ? null
           : FloatingActionButton(
               onPressed: () {
@@ -67,8 +67,10 @@ class _TimelineViewState extends State<TimelineView> {
                   context: context,
                   isScrollControlled: true,
                   backgroundColor: Colors.transparent,
-                  builder: (context) =>
-                      AddTaskView(initialDate: widget.selectedDate),
+                  builder: (context) => AddTaskView(
+                    initialDate: widget.selectedDate,
+                    disableRecurring: true,
+                  ),
                 );
               },
               backgroundColor: const Color(0xFF004D61),
@@ -77,10 +79,11 @@ class _TimelineViewState extends State<TimelineView> {
     );
   }
 
-  bool _isPastDate(DateTime date) {
+  bool _isNotToday(DateTime date) {
     final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    return date.isBefore(today);
+    return date.year != now.year ||
+        date.month != now.month ||
+        date.day != now.day;
   }
 }
 
@@ -215,12 +218,12 @@ class TimelineLayout extends StatelessWidget {
                 child: TaskCard(
                   task: task,
                   height: height,
-                  onTap: _isPastDate(task.taskDate)
+                  onTap: _isNotToday(task.taskDate)
                       ? null
                       : () {
-                          context.read<TaskCubit>().toggleTaskDone(task.id);
+                          context.read<TaskCubit>().toggleTaskDone(task);
                         },
-                  onLongPress: _isPastDate(task.taskDate)
+                  onLongPress: _isNotToday(task.taskDate)
                       ? null
                       : () {
                           _showTaskOptions(context, task);
@@ -234,10 +237,11 @@ class TimelineLayout extends StatelessWidget {
     );
   }
 
-  bool _isPastDate(DateTime date) {
+  bool _isNotToday(DateTime date) {
     final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    return date.isBefore(today);
+    return date.year != now.year ||
+        date.month != now.month ||
+        date.day != now.day;
   }
 
   void _showTaskOptions(BuildContext context, TaskModel task) {

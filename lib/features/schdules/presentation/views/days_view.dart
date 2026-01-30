@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:line/features/schdules/presentation/views/schedule_view.dart';
+import 'package:line/features/schdules/presentation/views/add_task_view.dart';
+import 'package:line/features/schdules/presentation/views/future_tasks_view.dart';
+import 'package:line/features/schdules/presentation/views/past_tasks_view.dart';
 
 class DaysView extends StatelessWidget {
   const DaysView({super.key});
 
   @override
   Widget build(BuildContext context) {
+    // Key to anchor the "Today" sliver
+    const Key centerKey = ValueKey('today-sliver');
+
     final today = DateTime.now();
     final normalizedToday = DateTime(today.year, today.month, today.day);
-
-    // Generate a list of days (e.g., 14 days starting from 3 days ago)
-    final days = List.generate(14, (index) {
-      return normalizedToday.add(Duration(days: index - 3));
-    });
 
     return Scaffold(
       appBar: AppBar(
@@ -23,7 +24,7 @@ class DaysView extends StatelessWidget {
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
             ),
             Text(
-              "Select a day to view",
+              "Scroll down for future, up for past",
               style: TextStyle(fontSize: 14, color: Colors.grey),
             ),
           ],
@@ -33,33 +34,163 @@ class DaysView extends StatelessWidget {
         elevation: 0,
         leading: IconButton(icon: const Icon(Icons.menu), onPressed: () {}),
         actions: [
-          IconButton(icon: const Icon(Icons.trending_up), onPressed: () {}),
+          IconButton(
+            icon: const Icon(Icons.calendar_today),
+            onPressed: () {
+              // Initial scroll handled by CustomScrollView center architecture
+            },
+          ),
         ],
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-        itemCount: days.length,
-        itemBuilder: (context, index) {
-          final day = days[index];
-          final isToday = day.isAtSameMomentAs(normalizedToday);
-          final isPast = day.isBefore(normalizedToday);
-          final isFuture = day.isAfter(normalizedToday);
+      body: CustomScrollView(
+        center: centerKey,
+        slivers: [
+          // 1. PAST DAYS (Top/Upwards)
+          SliverList(
+            delegate: SliverChildBuilderDelegate((context, index) {
+              // Determine item count: 7 days + 1 button
+              final itemCount = 8;
+              if (index >= itemCount) return null;
 
-          return DayCard(
-            day: day,
-            isToday: isToday,
-            isPast: isPast,
-            isFuture: isFuture,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => HomeView(selectedDate: day),
+              // Index 0 = Yesterday (closest to center)
+              // Index 6 = 7 days ago
+              // Index 7 = Past Tasks Button (furthest top)
+
+              if (index == itemCount - 1) {
+                // The "View Past Tasks" button (at the very top of content)
+                return Padding(
+                  padding: const EdgeInsets.only(
+                    bottom: 16,
+                    top: 40,
+                    left: 20,
+                    right: 20,
+                  ),
+                  child: TextButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              const PastTasksView(initialOffset: 2),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.history, color: Colors.blueGrey),
+                    label: const Text("View Older Weeks"),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      backgroundColor: Colors.blueGrey.withOpacity(0.1),
+                      foregroundColor: Colors.blueGrey,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      alignment: Alignment.centerLeft,
+                    ),
+                  ),
+                );
+              }
+
+              // Days (Yesterday backwards)
+              final dayOffset = index + 1; // 1 to 7
+              final day = normalizedToday.subtract(Duration(days: dayOffset));
+
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: DayCard(
+                  day: day,
+                  isToday: false,
+                  isPast: true,
+                  isFuture: false,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => HomeView(selectedDate: day),
+                      ),
+                    );
+                  },
                 ),
               );
-            },
+            }),
+          ),
+
+          // 2. TODAY & FUTURE DAYS (Bottom/Downwards)
+          SliverList(
+            key: centerKey,
+            delegate: SliverChildBuilderDelegate((context, index) {
+              // Determine item count: Today + 6 future days + Future Button
+              // Total 1 + 6 = 7 days visible initially + button = 8 items
+              final itemCount = 8;
+              if (index >= itemCount) return null;
+
+              if (index == itemCount - 1) {
+                // Future Tasks Button
+                return Padding(
+                  padding: const EdgeInsets.only(
+                    bottom: 80,
+                    left: 20,
+                    right: 20,
+                  ),
+                  child: TextButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const FutureTasksView(),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.calendar_month_outlined),
+                    label: const Text("View Further Future"),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      backgroundColor: Colors.white,
+                      foregroundColor: const Color(0xFF004D61),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                );
+              }
+
+              final day = normalizedToday.add(Duration(days: index));
+              final isToday = index == 0;
+              final isFuture = index > 0;
+
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: DayCard(
+                  day: day,
+                  isToday: isToday,
+                  isPast: false,
+                  isFuture: isFuture,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => HomeView(selectedDate: day),
+                      ),
+                    );
+                  },
+                ),
+              );
+            }),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            backgroundColor: Colors.transparent,
+            builder: (context) => const AddTaskView(),
           );
         },
+        backgroundColor: const Color(0xFF004D61),
+        shape: const CircleBorder(),
+        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }

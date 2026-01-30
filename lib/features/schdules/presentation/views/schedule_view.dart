@@ -103,7 +103,7 @@ class _HomeViewState extends State<HomeView> {
                                   ? null
                                   : () {
                                       context.read<TaskCubit>().toggleTaskDone(
-                                        task.id,
+                                        task,
                                       );
                                     },
                               onLongPress: isPast

@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:sqflite/sqflite.dart';
 import '../../features/schdules/data/models/task_model.dart';
+import '../../features/schdules/data/models/default_task_model.dart';
 import 'database_service.dart';
 
 class SyncService {
@@ -107,7 +108,10 @@ class SyncService {
         pushCount++;
       }
 
-      // 3. Update last sync timestamp
+      // 4. Sync Default Tasks
+      await _syncDefaultTasks(db, userId, lastSync);
+
+      // 5. Update last sync timestamp
       final now = DateTime.now().toUtc().toIso8601String();
       await db.insert('settings', {
         'key': lastSyncKey,
@@ -123,9 +127,99 @@ class SyncService {
     }
   }
 
+  Future<void> _syncDefaultTasks(
+    Database db,
+    String userId,
+    DateTime lastSync,
+  ) async {
+    print("SyncService: Syncing default tasks...");
+    // 1. Pull changes
+    final response = await supabase
+        .from('default_tasks')
+        .select()
+        .eq('user_id', userId)
+        .gt('server_updated_at', lastSync.toIso8601String());
+
+    final remoteData = response as List<dynamic>;
+    for (final json in remoteData) {
+      final remoteTask = DefaultTaskModel.fromSupabaseJson(json);
+
+      final List<Map<String, dynamic>> localMaps = await db.query(
+        'default_tasks',
+        where: 'id = ?',
+        whereArgs: [remoteTask.id],
+      );
+
+      if (localMaps.isEmpty) {
+        await db.insert('default_tasks', remoteTask.toMap());
+      } else {
+        final localTask = DefaultTaskModel.fromMap(localMaps.first);
+        if (remoteTask.serverUpdatedAt.isAfter(localTask.serverUpdatedAt)) {
+          await db.update(
+            'default_tasks',
+            remoteTask.toMap(),
+            where: 'id = ?',
+            whereArgs: [remoteTask.id],
+          );
+        }
+      }
+    }
+
+    // 2. Push changes
+    final List<Map<String, dynamic>> localChangesMaps = await db.query(
+      'default_tasks',
+      where: 'server_updated_at > ?',
+      whereArgs: [lastSync.toIso8601String()],
+    );
+
+    final localChanges = localChangesMaps
+        .map((m) => DefaultTaskModel.fromMap(m))
+        .toList();
+    for (final task in localChanges) {
+      final json = task.toSupabaseJson(userId);
+      await supabase.from('default_tasks').upsert(json);
+    }
+  }
+
   Future<void> _pushToRemote(TaskModel task, String userId) async {
     final json = task.toSupabaseJson(userId);
     print("SyncService: Pushing task to remote: $json");
     await supabase.from('tasks').upsert(json);
+  }
+
+  Future<void> fetchTasksForDateRange(DateTime start, DateTime end) async {
+    try {
+      if (!await _hasInternet()) return;
+
+      final user = supabase.auth.currentUser;
+      if (user == null) return;
+
+      final startStr = start.toIso8601String().split('T')[0];
+      final endStr = end.toIso8601String().split('T')[0];
+
+      print("SyncService: Fetching tasks from $startStr to $endStr");
+
+      final response = await supabase
+          .from('tasks')
+          .select()
+          .eq('user_id', user.id)
+          .gte('task_date', startStr)
+          .lte('task_date', endStr);
+
+      final remoteData = response as List<dynamic>;
+      final db = await databaseService.database;
+
+      for (final json in remoteData) {
+        final remoteTask = TaskModel.fromSupabaseJson(json);
+        await db.insert(
+          'tasks',
+          remoteTask.toMap(),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+    } catch (e) {
+      print("SyncService: Error fetching history: $e");
+      rethrow;
+    }
   }
 }

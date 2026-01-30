@@ -16,4 +16,6 @@ abstract class AuthRepository {
 
   bool get isAuthenticated;
   String? get currentUserId;
+
+  Future<Either<Failure, void>> updateTimezone(int offsetInHours);
 }

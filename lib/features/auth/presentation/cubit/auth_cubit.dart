@@ -11,10 +11,16 @@ class AuthCubit extends Cubit<AuthState> {
 
   void _checkAuthStatus() {
     if (repository.isAuthenticated) {
+      _updateTimezone(); // Sync timezone on app start/login
       emit(Authenticated(repository.currentUserId!));
     } else {
       emit(Unauthenticated());
     }
+  }
+
+  Future<void> _updateTimezone() async {
+    final offset = DateTime.now().timeZoneOffset.inHours;
+    await repository.updateTimezone(offset);
   }
 
   Future<void> signUp({required String email, required String password}) async {
