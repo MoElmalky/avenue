@@ -3,6 +3,7 @@ import '../../../../core/errors/exceptions.dart';
 import '../../../../core/utils/constants.dart';
 import '../../../../core/services/database_service.dart';
 import '../models/task_model.dart';
+import '../models/default_task_model.dart';
 import 'task_local_data_source.dart';
 
 class TaskLocalDataSourceImpl implements TaskLocalDataSource {
@@ -91,11 +92,7 @@ class TaskLocalDataSourceImpl implements TaskLocalDataSource {
   Future<TaskModel?> getTaskById(String id) async {
     try {
       final db = await databaseService.database;
-      final List<Map<String, dynamic>> maps = await db.query(
-        'tasks',
-        where: 'id = ?',
-        whereArgs: [id],
-      );
+      final maps = await db.query('tasks', where: 'id = ?', whereArgs: [id]);
 
       if (maps.isNotEmpty) {
         return TaskModel.fromMap(maps.first);
@@ -103,6 +100,69 @@ class TaskLocalDataSourceImpl implements TaskLocalDataSource {
       return null;
     } catch (e) {
       throw CacheException(ErrorMessages.cacheFailure);
+    }
+  }
+
+  @override
+  Future<void> insertDefaultTask(DefaultTaskModel task) async {
+    try {
+      final db = await databaseService.database;
+      await db.insert(
+        'default_tasks',
+        task.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    } catch (e) {
+      throw CacheException('Failed to add default task');
+    }
+  }
+
+  @override
+  Future<List<DefaultTaskModel>> getDefaultTasks() async {
+    try {
+      final db = await databaseService.database;
+      final maps = await db.query('default_tasks');
+      return List.generate(
+        maps.length,
+        (i) => DefaultTaskModel.fromMap(maps[i]),
+      );
+    } catch (e) {
+      throw CacheException('Failed to load default tasks');
+    }
+  }
+
+  @override
+  Future<List<TaskModel>> getFutureTasks(DateTime afterDate) async {
+    try {
+      final db = await databaseService.database;
+      final normalizedDate = afterDate.toIso8601String().split('T')[0];
+
+      final maps = await db.query(
+        'tasks',
+        where: "task_date > ? AND one_time = 1 AND is_deleted = 0",
+        whereArgs: [normalizedDate],
+        orderBy: 'task_date ASC, start_time ASC',
+      );
+
+      return List.generate(maps.length, (i) => TaskModel.fromMap(maps[i]));
+    } catch (e) {
+      throw CacheException('Failed to load future tasks');
+    }
+  }
+
+  @override
+  Future<void> deleteTasksBefore(DateTime date) async {
+    try {
+      final db = await databaseService.database;
+      final normalizedDate = date.toIso8601String().split('T')[0];
+
+      await db.delete(
+        'tasks',
+        where: "task_date < ?",
+        whereArgs: [normalizedDate],
+      );
+    } catch (e) {
+      throw CacheException('Failed to delete old tasks');
     }
   }
 }

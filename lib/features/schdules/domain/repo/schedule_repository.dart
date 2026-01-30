@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 import '../../../../core/errors/failures.dart';
 import '../../data/models/task_model.dart';
+import '../../data/models/default_task_model.dart';
 
 abstract class ScheduleRepository {
   /// Get all tasks for a specific date
@@ -27,4 +28,16 @@ abstract class ScheduleRepository {
   /// Returns [Right(void)] on success
   /// Returns [Left(Failure)] on error
   Future<Either<Failure, void>> toggleTaskDone(String id);
+
+  /// Add a new default task
+  Future<Either<Failure, void>> addDefaultTask(DefaultTaskModel task);
+
+  /// Get all default tasks
+  Future<Either<Failure, List<DefaultTaskModel>>> getDefaultTasks();
+
+  /// Get all one-time tasks after a specific date
+  Future<Either<Failure, List<TaskModel>>> getFutureTasks(DateTime afterDate);
+
+  /// Delete tasks older than a specific date
+  Future<Either<Failure, void>> deleteTasksBefore(DateTime date);
 }

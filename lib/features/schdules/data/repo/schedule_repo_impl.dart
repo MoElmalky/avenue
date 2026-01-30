@@ -4,6 +4,7 @@ import '../../../../core/errors/failures.dart';
 import '../../domain/repo/schedule_repository.dart';
 import '../datasources/task_local_data_source.dart';
 import '../models/task_model.dart';
+import '../models/default_task_model.dart';
 
 class ScheduleRepositoryImpl implements ScheduleRepository {
   final TaskLocalDataSource localDataSource;
@@ -70,6 +71,56 @@ class ScheduleRepositoryImpl implements ScheduleRepository {
 
       final updatedTask = task.copyWith(completed: !task.completed);
       await localDataSource.updateTask(updatedTask);
+      return const Right(null);
+    } on CacheException catch (e) {
+      return Left(CacheFailure(e.message));
+    } catch (e) {
+      return Left(CacheFailure('حدث خطأ غير متوقع'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> addDefaultTask(DefaultTaskModel task) async {
+    try {
+      await localDataSource.insertDefaultTask(task);
+      return const Right(null);
+    } on CacheException catch (e) {
+      return Left(CacheFailure(e.message));
+    } catch (e) {
+      return Left(CacheFailure('حدث خطأ غير متوقع'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<DefaultTaskModel>>> getDefaultTasks() async {
+    try {
+      final tasks = await localDataSource.getDefaultTasks();
+      return Right(tasks);
+    } on CacheException catch (e) {
+      return Left(CacheFailure(e.message));
+    } catch (e) {
+      return Left(CacheFailure('حدث خطأ غير متوقع'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<TaskModel>>> getFutureTasks(
+    DateTime afterDate,
+  ) async {
+    try {
+      final tasks = await localDataSource.getFutureTasks(afterDate);
+      return Right(tasks);
+    } on CacheException catch (e) {
+      return Left(CacheFailure(e.message));
+    } catch (e) {
+      return Left(CacheFailure('حدث خطأ غير متوقع'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> deleteTasksBefore(DateTime date) async {
+    try {
+      await localDataSource.deleteTasksBefore(date);
       return const Right(null);
     } on CacheException catch (e) {
       return Left(CacheFailure(e.message));

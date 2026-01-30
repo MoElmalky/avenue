@@ -98,8 +98,9 @@ class _RegisterViewState extends State<RegisterView> {
                         ),
                         validator: (v) {
                           if (v!.isEmpty) return "Required";
-                          if (v != _passwordController.text)
+                          if (v != _passwordController.text) {
                             return "Passwords don't match";
+                          }
                           return null;
                         },
                       ),

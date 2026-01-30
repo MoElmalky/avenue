@@ -1,7 +1,10 @@
 import 'dart:async';
+import 'package:dartz/dartz.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/errors/failures.dart';
 import '../../data/models/task_model.dart';
+import '../../data/models/default_task_model.dart';
 import '../../domain/repo/schedule_repository.dart';
 import 'task_state.dart';
 
@@ -40,16 +43,12 @@ class TaskCubit extends Cubit<TaskState> {
     try {
       await syncService.sync();
       // Only reload if we are not in a loading state to avoid flicker
-      if (state is! TaskLoading) {
-        final result = await repository.getTasksByDate(_selectedDate);
-        result.fold(
-          (failure) => null, // Ignore failures during background sync
-          (tasks) => emit(TaskLoaded(tasks, selectedDate: _selectedDate)),
-        );
+      // And only if we are viewing a specific date (not Future Tasks)
+      if (state is! TaskLoading && state is! FutureTasksLoaded) {
+        await loadTasks(date: _selectedDate);
       }
     } catch (e) {
       print("TaskCubit: Background sync failed: $e");
-      // Don't emit error state for background sync to avoid interrupting user
     }
   }
 
@@ -59,7 +58,34 @@ class TaskCubit extends Cubit<TaskState> {
     }
     emit(TaskLoading(selectedDate: _selectedDate));
 
-    if (shouldSync) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    // Check if the selected date is in the past (before today)
+    final isPastDate =
+        _selectedDate.day != today.day ||
+            _selectedDate.month != today.month ||
+            _selectedDate.year != today.year
+        ? _selectedDate.isBefore(today)
+        : false;
+
+    // Smart Fetching: If date is older than 7 days, fetch from backend
+    // We only preserve 1 week locally.
+    final retentionLimit = today.subtract(const Duration(days: 7));
+    if (_selectedDate.isBefore(retentionLimit)) {
+      try {
+        // Fetch the specific week containing this date
+        // E.g., fetch from selectedDate to selectedDate + 7 days or similar chunk
+        // For simplicity, let's fetch the whole week context
+        final startOfWeek = _selectedDate.subtract(
+          Duration(days: _selectedDate.weekday - 1),
+        );
+        final endOfWeek = startOfWeek.add(const Duration(days: 6));
+        await syncService.fetchTasksForDateRange(startOfWeek, endOfWeek);
+      } catch (e) {
+        print("TaskCubit: Error fetching historical data: $e");
+        // Continue to try loading from local DB even if fetch fails
+      }
+    } else if (shouldSync) {
       try {
         await syncService.sync();
       } catch (e) {
@@ -67,12 +93,89 @@ class TaskCubit extends Cubit<TaskState> {
       }
     }
 
+    // 1. Get specific tasks
     final result = await repository.getTasksByDate(_selectedDate);
+
+    // 2. Get default tasks
+    // ONLY fetch/merge default tasks if we are NOT in the past.
+    // For past dates, we only show crystallized records (real TaskModels).
+    final Either<Failure, List<DefaultTaskModel>> defaultTasksResult =
+        isPastDate
+        ? const Right<Failure, List<DefaultTaskModel>>(
+            [],
+          ) // Return empty list for past dates
+        : await repository.getDefaultTasks(); // Fetch for Today/Future
 
     result.fold(
       (failure) =>
           emit(TaskError(failure.message, selectedDate: _selectedDate)),
-      (tasks) => emit(TaskLoaded(tasks, selectedDate: _selectedDate)),
+      (tasks) {
+        // Merge default tasks
+        final List<TaskModel> allTasks = List.from(tasks);
+
+        defaultTasksResult.fold(
+          (l) => null, // Ignore default tasks error or if skipped
+          (defaultTasks) {
+            // will be empty list if isPastDate is true
+            for (var dt in defaultTasks) {
+              // Check if default task runs on this weekday
+              if (dt.weekdays.contains(_selectedDate.weekday)) {
+                // Determine if we should show this default task
+                // (Simple logic: just show it as a TaskModel instance)
+                allTasks.add(
+                  TaskModel.fromTimeOfDay(
+                    name: dt.name,
+                    desc: dt.desc,
+                    startTime: dt.startTime,
+                    endTime: dt.endTime,
+                    taskDate: _selectedDate,
+                    category: dt.category,
+                    color: dt.color,
+                    completed: false, // Default tasks start as not completed
+                    oneTime: false,
+                    importanceType: dt.importanceType,
+                  ),
+                );
+              }
+            }
+          },
+        );
+
+        // Sort by start time
+        allTasks.sort((a, b) {
+          if (a.startTime == null) return 1;
+          if (b.startTime == null) return -1;
+          return a.startTime!.compareTo(b.startTime!);
+        });
+
+        emit(TaskLoaded(allTasks, selectedDate: _selectedDate));
+      },
+    );
+  }
+
+  Future<void> loadFutureTasks() async {
+    emit(const TaskLoading());
+    // Only show tasks that are beyond the next 7 days
+    final futureThreshold = DateTime.now().add(const Duration(days: 7));
+    final result = await repository.getFutureTasks(futureThreshold);
+    result.fold(
+      (failure) => emit(TaskError(failure.message)),
+      (tasks) => emit(FutureTasksLoaded(tasks)),
+    );
+  }
+
+  Future<void> addDefaultTask(DefaultTaskModel task) async {
+    final result = await repository.addDefaultTask(task);
+    result.fold(
+      (failure) =>
+          emit(TaskError(failure.message, selectedDate: _selectedDate)),
+      (_) {
+        if (state is FutureTasksLoaded) {
+          loadFutureTasks();
+        } else {
+          loadTasks();
+        }
+      },
     );
   }
 
@@ -83,8 +186,12 @@ class TaskCubit extends Cubit<TaskState> {
       (failure) =>
           emit(TaskError(failure.message, selectedDate: _selectedDate)),
       (_) {
-        loadTasks(); // Reload locally first
-        syncTasks(); // Then sync in background
+        if (state is FutureTasksLoaded) {
+          loadFutureTasks();
+        } else {
+          loadTasks(); // Reload locally first
+          syncTasks(); // Then sync in background
+        }
       },
     );
   }
@@ -96,8 +203,12 @@ class TaskCubit extends Cubit<TaskState> {
       (failure) =>
           emit(TaskError(failure.message, selectedDate: _selectedDate)),
       (_) {
-        loadTasks(); // Reload locally first
-        syncTasks(); // Then sync in background
+        if (state is FutureTasksLoaded) {
+          loadFutureTasks();
+        } else {
+          loadTasks(); // Reload locally first
+          syncTasks(); // Then sync in background
+        }
       },
     );
   }
@@ -109,21 +220,45 @@ class TaskCubit extends Cubit<TaskState> {
       (failure) =>
           emit(TaskError(failure.message, selectedDate: _selectedDate)),
       (_) {
-        loadTasks(); // Reload locally first
-        syncTasks(); // Then sync in background
+        if (state is FutureTasksLoaded) {
+          loadFutureTasks();
+        } else {
+          loadTasks(); // Reload locally first
+          syncTasks(); // Then sync in background
+        }
       },
     );
   }
 
-  Future<void> toggleTaskDone(String id) async {
-    final result = await repository.toggleTaskDone(id);
+  Future<void> toggleTaskDone(TaskModel task) async {
+    // Check if task exists in DB first
+    // Note: Default tasks have random IDs generated on the fly in loadTasks,
+    // so getTaskById might return null even if we pass that ID.
+    // However, for "real" tasks, they are in the DB.
 
-    result.fold(
-      (failure) =>
-          emit(TaskError(failure.message, selectedDate: _selectedDate)),
+    // We try to toggle it using the repo.
+    // If it fails with "Not Found", we assume it's a default task and we "Crystallize" it.
+
+    final result = await repository.toggleTaskDone(task.id);
+
+    await result.fold(
+      (failure) async {
+        // If failed because not found, create it as a new task (Crystallization)
+        if (failure.message.contains('not found') ||
+            failure.message.contains('غير موجودة')) {
+          print("Crystallizing default task: ${task.name}");
+          await addTask(task.copyWith(completed: true));
+        } else {
+          emit(TaskError(failure.message, selectedDate: _selectedDate));
+        }
+      },
       (_) {
-        loadTasks(); // Reload locally first
-        syncTasks(); // Then sync in background
+        if (state is FutureTasksLoaded) {
+          loadFutureTasks();
+        } else {
+          loadTasks(); // Reload locally first
+          syncTasks(); // Then sync in background
+        }
       },
     );
   }

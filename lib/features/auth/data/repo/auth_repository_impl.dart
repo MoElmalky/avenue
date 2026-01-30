@@ -53,4 +53,22 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   String? get currentUserId => supabase.auth.currentUser?.id;
+
+  @override
+  Future<Either<Failure, void>> updateTimezone(int offsetInHours) async {
+    try {
+      final userId = supabase.auth.currentUser?.id;
+      if (userId == null)
+        return const Left(ServerFailure('User not logged in'));
+
+      await supabase.from('profiles').upsert({
+        'id': userId,
+        'timezone_offset': offsetInHours,
+        'updated_at': DateTime.now().toUtc().toIso8601String(),
+      });
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
 }
