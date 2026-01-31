@@ -6,6 +6,7 @@ import '../../features/schdules/domain/repo/schedule_repository.dart';
 import '../../features/schdules/presentation/cubit/task_cubit.dart';
 import '../../features/ai_chat/data/ai_repository.dart';
 import '../../features/ai_chat/presentation/logic/chat_cubit.dart';
+import '../services/embedding_service.dart';
 import '../../features/weeks/domain/repo/weekly_repository.dart';
 import '../../features/weeks/data/repo/weekly_repo_impl.dart';
 import '../../features/weeks/presentation/cubit/weekly_cubit.dart';
@@ -50,7 +51,11 @@ Future<void> initializeDependencies() async {
     () => AuthRepositoryImpl(supabase: sl()),
   );
   sl.registerLazySingleton<ScheduleRepository>(
-    () => ScheduleRepositoryImpl(localDataSource: sl()),
+    () => ScheduleRepositoryImpl(
+      localDataSource: sl(),
+      supabase: sl(),
+      embeddingService: sl(),
+    ),
   );
   sl.registerLazySingleton<WeeklyRepository>(
     () => WeeklyRepositoryImpl(localDataSource: sl()),
@@ -62,10 +67,15 @@ Future<void> initializeDependencies() async {
   sl.registerFactory(() => WeeklyCubit(repository: sl()));
 
   // AI Chat
+  sl.registerLazySingleton<EmbeddingService>(
+    () => EmbeddingService(apiKey: dotenv.env['GEMINI_API_KEY'] ?? ''),
+  );
+
   sl.registerLazySingleton<AiRepository>(
-    () => AiRepository(apiKey: dotenv.env['GEMINI_API_KEY'] ?? ''),
+    () => AiRepository(
+      apiKey: dotenv.env['GEMINI_API_KEY'] ?? '',
+      scheduleRepository: sl(),
+    ),
   );
-  sl.registerFactory(
-    () => ChatCubit(aiRepository: sl(), scheduleRepository: sl()),
-  );
+  sl.registerFactory(() => ChatCubit(aiRepository: sl()));
 }
