@@ -1,4 +1,6 @@
+import 'package:flutter/material.dart';
 import '../../schdules/data/models/task_model.dart';
+import '../../schdules/data/models/default_task_model.dart';
 import '../../schdules/domain/repo/schedule_repository.dart';
 import 'ai_action_models.dart';
 
@@ -57,6 +59,29 @@ class AiExecutor {
       updateSettings: (theme, language, notificationsEnabled) async {
         print('Updating settings: $theme, $language, $notificationsEnabled');
       },
+      createDefaultTask:
+          (name, weekdays, startTime, endTime, importance, note) async {
+            final partsStart = startTime.split(':');
+            final partsEnd = endTime.split(':');
+
+            final task = DefaultTaskModel(
+              name: name,
+              weekdays: weekdays,
+              startTime: TimeOfDay(
+                hour: int.parse(partsStart[0]),
+                minute: int.parse(partsStart[1]),
+              ),
+              endTime: TimeOfDay(
+                hour: int.parse(partsEnd[0]),
+                minute: int.parse(partsEnd[1]),
+              ),
+              importanceType: importance,
+              desc: note,
+              category: 'Meeting', // Default category
+              colorValue: 0xFF004D61, // Default color
+            );
+            await _scheduleRepository.addDefaultTask(task);
+          },
       unknown: (rawResponse) {
         print('Unknown action: $rawResponse');
       },

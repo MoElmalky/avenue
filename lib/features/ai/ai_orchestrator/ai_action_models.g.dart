@@ -96,6 +96,32 @@ Map<String, dynamic> _$UpdateSettingsActionToJson(
   'type': instance.$type,
 };
 
+CreateDefaultTaskAction _$CreateDefaultTaskActionFromJson(
+  Map<String, dynamic> json,
+) => CreateDefaultTaskAction(
+  name: json['name'] as String,
+  weekdays: (json['weekdays'] as List<dynamic>)
+      .map((e) => (e as num).toInt())
+      .toList(),
+  startTime: json['startTime'] as String,
+  endTime: json['endTime'] as String,
+  importance: json['importance'] as String? ?? 'Medium',
+  note: json['note'] as String?,
+  $type: json['type'] as String?,
+);
+
+Map<String, dynamic> _$CreateDefaultTaskActionToJson(
+  CreateDefaultTaskAction instance,
+) => <String, dynamic>{
+  'name': instance.name,
+  'weekdays': instance.weekdays,
+  'startTime': instance.startTime,
+  'endTime': instance.endTime,
+  'importance': instance.importance,
+  'note': instance.note,
+  'type': instance.$type,
+};
+
 UnknownAction _$UnknownActionFromJson(Map<String, dynamic> json) =>
     UnknownAction(
       rawResponse: json['rawResponse'] as String,

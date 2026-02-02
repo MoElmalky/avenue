@@ -38,6 +38,15 @@ sealed class AiAction with _$AiAction {
     bool? notificationsEnabled,
   }) = UpdateSettingsAction;
 
+  const factory AiAction.createDefaultTask({
+    required String name,
+    required List<int> weekdays, // 1 = Monday, 7 = Sunday
+    required String startTime,
+    required String endTime,
+    @Default('Medium') String importance,
+    String? note,
+  }) = CreateDefaultTaskAction;
+
   const factory AiAction.unknown({required String rawResponse}) = UnknownAction;
 
   factory AiAction.fromJson(Map<String, dynamic> json) =>

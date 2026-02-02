@@ -4,7 +4,6 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import '../../../../core/di/injection_container.dart';
 import '../logic/chat_cubit.dart';
 import '../logic/chat_state.dart';
-import '../../../ai/ai_orchestrator/ai_action_models.dart';
 
 class AiChatView extends StatelessWidget {
   const AiChatView({super.key});
@@ -82,61 +81,23 @@ class AiChatView extends StatelessWidget {
                                   !msg.isExecuted)
                                 Padding(
                                   padding: const EdgeInsets.only(top: 8),
-                                  child: Wrap(
-                                    spacing: 8,
-                                    children: msg.suggestedActions!.map((
-                                      action,
-                                    ) {
-                                      return ElevatedButton(
-                                        onPressed: () => context
-                                            .read<ChatCubit>()
-                                            .confirmAction(index, action),
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: const Color(
-                                            0xFF004D61,
-                                          ),
-                                          foregroundColor: Colors.white,
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 12,
-                                            vertical: 4,
-                                          ),
-                                          textStyle: const TextStyle(
-                                            fontSize: 12,
-                                          ),
-                                        ),
-                                        child: Text(
-                                          action.when(
-                                            createTask:
-                                                (
-                                                  name,
-                                                  date,
-                                                  startTime,
-                                                  endTime,
-                                                  importance,
-                                                  note,
-                                                ) => 'Create "$name"',
-                                            updateTask:
-                                                (
-                                                  id,
-                                                  name,
-                                                  date,
-                                                  startTime,
-                                                  endTime,
-                                                  importance,
-                                                  note,
-                                                  isDone,
-                                                ) => 'Update Task',
-                                            deleteTask: (id) => 'Delete Task',
-                                            reorderDay: (date, ids) =>
-                                                'Reorder Day',
-                                            updateSettings:
-                                                (theme, lang, notify) =>
-                                                    'Update Settings',
-                                            unknown: (_) => 'Unknown',
-                                          ),
-                                        ),
-                                      );
-                                    }).toList(),
+                                  child: ElevatedButton(
+                                    onPressed: () => context
+                                        .read<ChatCubit>()
+                                        .confirmAllActions(index),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color(0xFF004D61),
+                                      foregroundColor: Colors.white,
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 8,
+                                      ),
+                                    ),
+                                    child: Text(
+                                      msg.suggestedActions!.length == 1
+                                          ? 'Confirm'
+                                          : 'Confirm ${msg.suggestedActions!.length} Actions',
+                                    ),
                                   ),
                                 ),
                               if (msg.isExecuted)

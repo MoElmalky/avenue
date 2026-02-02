@@ -1,6 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../ai/ai_orchestrator/ai_orchestrator.dart';
-import '../../../ai/ai_orchestrator/ai_action_models.dart';
 import 'chat_state.dart';
 
 class ChatCubit extends Cubit<ChatState> {
@@ -39,28 +38,37 @@ class ChatCubit extends Cubit<ChatState> {
     }
   }
 
-  void confirmAction(int messageIndex, AiAction action) async {
+  void confirmAllActions(int messageIndex) async {
     try {
       // 1. Optimistic UI update: Mark as executed immediately so buttons disappear
       final message = _messages[messageIndex];
+      final actions = message.suggestedActions ?? [];
 
-      _messages[messageIndex] = message.copyWith(isExecuted: true);
+      if (actions.isEmpty) return;
+
+      final updatedMessages = List<ChatMessage>.from(_messages);
+      updatedMessages[messageIndex] = message.copyWith(isExecuted: true);
+      _messages = updatedMessages;
       emit(ChatLoaded(List.from(_messages)));
 
-      // 2. Perform the actual execution
-      await aiOrchestrator.confirmAndExecute(action);
+      // 2. Perform the actual execution for all actions
+      for (final action in actions) {
+        await aiOrchestrator.confirmAndExecute(action);
+      }
 
       // 3. Add success message
-      _messages.add(
-        const ChatMessage(text: "Action executed successfully!", isUser: false),
-      );
-      emit(ChatLoaded(List.from(_messages)));
+      final successText = actions.length == 1
+          ? "Action executed successfully!"
+          : "${actions.length} actions executed successfully!";
+
+      _messages = List.from(_messages)
+        ..add(ChatMessage(text: successText, isUser: false));
+      emit(ChatLoaded(_messages));
     } catch (e) {
       print('Execution Error: $e');
-      _messages.add(
-        ChatMessage(text: "Error executing action: $e", isUser: false),
-      );
-      emit(ChatLoaded(List.from(_messages)));
+      _messages = List.from(_messages)
+        ..add(ChatMessage(text: "Error executing action: $e", isUser: false));
+      emit(ChatLoaded(_messages));
     }
   }
 }
