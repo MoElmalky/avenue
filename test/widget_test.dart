@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:line/main.dart';
-import 'package:line/features/schdules/presentation/views/schedule_view.dart';
+import 'package:avenue/main.dart';
+import 'package:avenue/features/schdules/presentation/views/schedule_view.dart';
 
 void main() {
   testWidgets('HomeView smoke test', (WidgetTester tester) async {

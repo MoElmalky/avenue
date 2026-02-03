@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:line/core/utils/constants.dart';
-import 'package:line/features/schdules/data/models/task_model.dart';
-import 'package:line/features/schdules/presentation/views/add_task_view.dart';
-import 'package:line/features/schdules/presentation/views/timeline_view.dart';
+import 'package:avenue/core/utils/constants.dart';
+import 'package:avenue/features/schdules/data/models/task_model.dart';
+import 'package:avenue/features/schdules/presentation/views/add_task_view.dart';
+import 'package:avenue/features/schdules/presentation/views/timeline_view.dart';
 import '../cubit/task_cubit.dart';
 import '../cubit/task_state.dart';
 import '../widgets/task_card.dart';

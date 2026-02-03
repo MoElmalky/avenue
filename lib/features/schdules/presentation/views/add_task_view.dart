@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:line/core/utils/constants.dart';
-import 'package:line/core/utils/validation.dart';
+import 'package:avenue/core/utils/constants.dart';
+import 'package:avenue/core/utils/validation.dart';
 import '../../data/models/task_model.dart';
 import '../../data/models/default_task_model.dart';
 import '../cubit/task_cubit.dart';
