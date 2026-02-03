@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:line/core/utils/constants.dart';
+import 'package:avenue/core/utils/constants.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import '../../../../core/di/injection_container.dart';
 import '../logic/chat_cubit.dart';
@@ -55,6 +55,9 @@ class _ChatScreenState extends State<_ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return BlocListener<ChatSessionCubit, ChatSessionState>(
       listener: (context, sessionState) {
         if (sessionState is ChatSessionLoaded) {
@@ -86,8 +89,9 @@ class _ChatScreenState extends State<_ChatScreen> {
         backgroundColor: theme.scaffoldBackgroundColor,
         appBar: AppBar(
           title: const Text('AI Assistant'),
-          backgroundColor: const Color(0xFF004D61),
-          foregroundColor: Colors.white,
+          backgroundColor: Colors.transparent,
+          foregroundColor: theme.colorScheme.onBackground,
+          elevation: 0,
           actions: [
             Builder(
               builder: (context) => IconButton(
@@ -215,9 +219,7 @@ class _ChatScreenState extends State<_ChatScreen> {
         margin: const EdgeInsets.symmetric(vertical: 8),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: msg.isUser
-              ? AppColors.deepPurple
-              : (isDark ? Colors.grey[900] : Colors.grey[100]),
+          color: msg.isUser ? AppColors.deepPurple : theme.cardColor,
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(20),
             topRight: const Radius.circular(20),
@@ -319,6 +321,8 @@ class _ChatDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Drawer(
       child: BlocBuilder<ChatSessionCubit, ChatSessionState>(
         builder: (context, state) {
@@ -331,7 +335,7 @@ class _ChatDrawer extends StatelessWidget {
             padding: EdgeInsets.zero,
             children: [
               DrawerHeader(
-                decoration: const BoxDecoration(color: Color(0xFF004D61)),
+                decoration: BoxDecoration(color: AppColors.deepPurple),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.end,
@@ -376,7 +380,7 @@ class _ChatDrawer extends StatelessWidget {
                 return ListTile(
                   leading: Icon(
                     Icons.chat,
-                    color: isActive ? const Color(0xFF004D61) : null,
+                    color: isActive ? theme.colorScheme.primary : null,
                   ),
                   title: Text(
                     chat.title,
@@ -384,7 +388,7 @@ class _ChatDrawer extends StatelessWidget {
                       fontWeight: isActive
                           ? FontWeight.bold
                           : FontWeight.normal,
-                      color: isActive ? const Color(0xFF004D61) : null,
+                      color: isActive ? theme.colorScheme.primary : null,
                     ),
                   ),
                   subtitle: Text(_formatDate(chat.createdAt)),
@@ -548,7 +552,6 @@ class _ChatInputState extends State<_ChatInput> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     return Container(
       padding: EdgeInsets.fromLTRB(
@@ -569,7 +572,7 @@ class _ChatInputState extends State<_ChatInput> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               decoration: BoxDecoration(
-                color: isDark ? Colors.grey[900] : Colors.grey[100],
+                color: theme.cardColor,
                 borderRadius: BorderRadius.circular(28),
               ),
               child: TextField(

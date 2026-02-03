@@ -3,16 +3,16 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:line/core/di/injection_container.dart';
-import 'package:line/core/utils/routes.dart';
-import 'package:line/features/schdules/presentation/cubit/task_cubit.dart';
-import 'package:line/features/auth/presentation/cubit/auth_cubit.dart';
+import 'package:avenue/core/di/injection_container.dart';
+import 'package:avenue/core/utils/routes.dart';
+import 'package:avenue/features/schdules/presentation/cubit/task_cubit.dart';
+import 'package:avenue/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:sqlite3/open.dart';
-import 'package:line/core/utils/constants.dart';
-import 'package:line/features/schdules/domain/repo/schedule_repository.dart';
-import 'package:line/core/logic/theme_cubit.dart';
+import 'package:avenue/core/utils/constants.dart';
+import 'package:avenue/features/schdules/domain/repo/schedule_repository.dart';
+import 'package:avenue/core/logic/theme_cubit.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

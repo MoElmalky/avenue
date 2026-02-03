@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:line/core/logic/theme_cubit.dart';
-import 'package:line/core/utils/constants.dart';
+import 'package:avenue/core/logic/theme_cubit.dart';
+import 'package:avenue/core/utils/constants.dart';
 
 class SettingsView extends StatelessWidget {
   const SettingsView({super.key});

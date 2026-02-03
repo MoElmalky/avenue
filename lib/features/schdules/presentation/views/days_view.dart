@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../cubit/task_cubit.dart';
 import '../cubit/task_state.dart';
-import 'package:line/features/schdules/presentation/views/schedule_view.dart';
-import 'package:line/features/schdules/presentation/views/add_task_view.dart';
-import 'package:line/features/schdules/presentation/views/future_tasks_view.dart';
-import 'package:line/features/schdules/presentation/views/past_tasks_view.dart';
+import 'package:avenue/features/schdules/presentation/views/schedule_view.dart';
+import 'package:avenue/features/schdules/presentation/views/add_task_view.dart';
+import 'package:avenue/features/schdules/presentation/views/future_tasks_view.dart';
+import 'package:avenue/features/schdules/presentation/views/past_tasks_view.dart';
 import 'package:go_router/go_router.dart';
-import 'package:line/core/utils/routes.dart';
+import 'package:avenue/core/utils/routes.dart';
 
 class DaysView extends StatefulWidget {
   const DaysView({super.key});

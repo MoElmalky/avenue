@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../cubit/task_cubit.dart';
 import '../cubit/task_state.dart';
-import 'package:line/features/schdules/presentation/views/days_view.dart';
-import 'package:line/features/schdules/presentation/views/schedule_view.dart';
+import 'package:avenue/features/schdules/presentation/views/days_view.dart';
+import 'package:avenue/features/schdules/presentation/views/schedule_view.dart';
 
 class PastTasksView extends StatefulWidget {
   final int initialOffset;

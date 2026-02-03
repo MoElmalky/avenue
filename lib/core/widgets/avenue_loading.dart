@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:line/core/utils/constants.dart';
+import 'package:avenue/core/utils/constants.dart';
 
 class AvenueLoadingIndicator extends StatelessWidget {
   final String? message;

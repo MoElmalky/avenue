@@ -52,10 +52,6 @@ class AvenueNavBar extends StatelessWidget {
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(36),
-              border: Border.all(
-                color: Colors.white.withOpacity(0.15),
-                width: 1.5,
-              ),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
