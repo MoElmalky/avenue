@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:dartz/dartz.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:uuid/uuid.dart';
 import '../../../../core/errors/failures.dart';
 import '../../domain/repo/auth_repository.dart';
 import '../models/device_model.dart';
@@ -85,8 +86,11 @@ class AuthRepositoryImpl implements AuthRepository {
         return const Left(ServerFailure('User not logged in'));
       }
 
+      // Generate a stable UUID from the hardware deviceId
+      final stableId = const Uuid().v5(Namespace.url.value, deviceId);
+
       final device = DeviceModel(
-        id: deviceId,
+        id: stableId,
         userId: userId,
         deviceId: deviceId,
       );
