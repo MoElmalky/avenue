@@ -1,5 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../ai/ai_orchestrator/ai_orchestrator.dart';
+import '../../ai/ai_orchestrator.dart';
 import 'chat_state.dart';
 import 'chat_session_cubit.dart';
 
@@ -64,44 +64,19 @@ class ChatCubit extends Cubit<ChatState> {
     }
   }
 
+  // Placeholder for any non-tool UI actions that might need execution in the future
   void confirmAllActions(int messageIndex) async {
-    try {
-      // 1. Optimistic UI update: Mark as executed immediately so buttons disappear
-      final message = _messages[messageIndex];
-      final actions = message.suggestedActions ?? [];
+    if (messageIndex < 0 || messageIndex >= _messages.length) return;
 
-      if (actions.isEmpty) return;
+    final msg = _messages[messageIndex];
+    if (msg.suggestedActions == null || msg.isExecuted) return;
 
-      final updatedMessages = List<ChatMessage>.from(_messages);
-      updatedMessages[messageIndex] = message.copyWith(isExecuted: true);
-      _messages = updatedMessages;
-      emit(ChatLoaded(List.from(_messages)));
+    // Update the message state to mark it as executed
+    _messages[messageIndex] = msg.copyWith(isExecuted: true);
+    emit(ChatLoaded(List.from(_messages)));
 
-      // 2. Perform the actual execution for all actions
-      for (final action in actions) {
-        await aiOrchestrator.confirmAndExecute(action);
-      }
-
-      // 3. Add success message
-      final successText = actions.length == 1
-          ? "Action executed successfully!"
-          : "${actions.length} actions executed successfully!";
-
-      _messages = List.from(_messages)
-        ..add(ChatMessage(text: successText, isUser: false));
-      emit(ChatLoaded(_messages));
-
-      // Save success message to Supabase
-      await sessionCubit?.saveMessage('ai', successText);
-
-      // Update session state
-      sessionCubit?.updateMessages(_messages);
-    } catch (e) {
-      print('Execution Error: $e');
-      _messages = List.from(_messages)
-        ..add(ChatMessage(text: "Error executing action: $e", isUser: false));
-      emit(ChatLoaded(_messages));
-    }
+    // Optional: Update session state
+    sessionCubit?.updateMessages(_messages);
   }
 
   // Constant for AI context window

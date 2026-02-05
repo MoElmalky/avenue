@@ -27,11 +27,6 @@ sealed class AiAction with _$AiAction {
 
   const factory AiAction.deleteTask({required String id}) = DeleteTaskAction;
 
-  const factory AiAction.reorderDay({
-    required DateTime date,
-    required List<String> taskIdsInOrder,
-  }) = ReorderDayAction;
-
   const factory AiAction.updateSettings({
     String? theme,
     String? language,
@@ -46,6 +41,19 @@ sealed class AiAction with _$AiAction {
     @Default('Medium') String importance,
     String? note,
   }) = CreateDefaultTaskAction;
+
+  const factory AiAction.updateDefaultTask({
+    required String id,
+    String? name,
+    List<int>? weekdays,
+    String? startTime,
+    String? endTime,
+    String? importance,
+    String? note,
+  }) = UpdateDefaultTaskAction;
+
+  const factory AiAction.deleteDefaultTask({required String id}) =
+      DeleteDefaultTaskAction;
 
   const factory AiAction.unknown({required String rawResponse}) = UnknownAction;
 

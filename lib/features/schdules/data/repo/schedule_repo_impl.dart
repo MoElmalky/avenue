@@ -328,4 +328,18 @@ class ScheduleRepositoryImpl implements ScheduleRepository {
       return Left(CacheFailure('Unexpected error occurred'));
     }
   }
+
+  @override
+  Future<Either<Failure, DefaultTaskModel?>> getDefaultTaskById(
+    String id,
+  ) async {
+    try {
+      final task = await localDataSource.getDefaultTaskById(id);
+      return Right(task);
+    } on CacheException catch (e) {
+      return Left(CacheFailure(e.message));
+    } catch (e) {
+      return Left(CacheFailure('Failed to get default task'));
+    }
+  }
 }

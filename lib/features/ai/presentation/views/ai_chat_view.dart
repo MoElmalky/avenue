@@ -90,7 +90,7 @@ class _ChatScreenState extends State<_ChatScreen> {
         appBar: AppBar(
           title: const Text('AI Assistant'),
           backgroundColor: Colors.transparent,
-          foregroundColor: theme.colorScheme.onBackground,
+          foregroundColor: theme.colorScheme.onSurface,
           elevation: 0,
           actions: [
             Builder(

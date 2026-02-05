@@ -72,22 +72,28 @@ class TaskCard extends StatelessWidget {
                               // Header: Category and Importance
                               Row(
                                 children: [
-                                  _buildBadge(
-                                    context,
-                                    task.category,
-                                    task.color,
+                                  Flexible(
+                                    child: _buildBadge(
+                                      context,
+                                      task.category,
+                                      task.color,
+                                    ),
                                   ),
                                   if (task.importanceType != null &&
                                       !isCompact) ...[
                                     const SizedBox(width: 6),
-                                    _buildBadge(
-                                      context,
-                                      task.importanceType!,
-                                      _getImportanceColor(task.importanceType!),
-                                      isOutline: true,
+                                    Flexible(
+                                      child: _buildBadge(
+                                        context,
+                                        task.importanceType!,
+                                        _getImportanceColor(
+                                          task.importanceType!,
+                                        ),
+                                        isOutline: true,
+                                      ),
                                     ),
                                   ],
-                                  const Spacer(),
+                                  const Spacer(flex: 1),
                                   if (task.completed)
                                     const Icon(
                                       Icons.check_circle,
@@ -138,6 +144,7 @@ class TaskCard extends StatelessWidget {
                                   ),
                                   const SizedBox(width: 4),
                                   Flexible(
+                                    flex: 2,
                                     child: Text(
                                       '${_formatTime(task.startTimeOfDay)} - ${_formatTime(task.endTimeOfDay)}',
                                       style: TextStyle(
@@ -150,7 +157,13 @@ class TaskCard extends StatelessWidget {
                                     ),
                                   ),
                                   const SizedBox(width: 8),
-                                  _buildTypeIndicator(context, task.oneTime),
+                                  Flexible(
+                                    flex: 3,
+                                    child: _buildTypeIndicator(
+                                      context,
+                                      task.oneTime,
+                                    ),
+                                  ),
                                 ],
                               ),
                             ],
@@ -191,6 +204,8 @@ class TaskCard extends StatelessWidget {
           fontWeight: FontWeight.w800,
           letterSpacing: 0.5,
         ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
       ),
     );
   }
@@ -206,13 +221,17 @@ class TaskCard extends StatelessWidget {
           color: theme.colorScheme.primary.withOpacity(0.6),
         ),
         const SizedBox(width: 4),
-        Text(
-          isOneTime ? "ONE-TIME" : "RECURRING",
-          style: TextStyle(
-            fontSize: 9,
-            fontWeight: FontWeight.w700,
-            color: theme.colorScheme.primary.withOpacity(0.6),
-            letterSpacing: 0.3,
+        Flexible(
+          child: Text(
+            isOneTime ? "ONE-TIME" : "RECURRING",
+            style: TextStyle(
+              fontSize: 9,
+              fontWeight: FontWeight.w700,
+              color: theme.colorScheme.primary.withOpacity(0.6),
+              letterSpacing: 0.3,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ),
       ],

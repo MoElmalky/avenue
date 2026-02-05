@@ -9,10 +9,11 @@ class GeminiHttpClient {
 
   GeminiHttpClient({required this.apiKey, this.model = 'gemini-flash-latest'});
 
-  Future<String> generateContent({
+  Future<Map<String, dynamic>> generateContent({
     required String systemPrompt,
     required List<Map<String, dynamic>> history,
     required String userMessage,
+    List<Map<String, dynamic>>? tools,
   }) async {
     final client = HttpClient();
     try {
@@ -20,25 +21,27 @@ class GeminiHttpClient {
       final request = await client.postUrl(url);
       request.headers.set('Content-Type', 'application/json');
 
-      final cleanContents = [
-        ...history,
-        {
-          'role': 'user',
-          'parts': [
-            {
-              'text':
-                  "Instructions:\n$systemPrompt\n\nUser Message: $userMessage",
-            },
-          ],
-        },
-      ];
-
       final v1betaBody = {
-        'contents': cleanContents,
+        'contents': [
+          ...history,
+          {
+            'role': 'user',
+            'parts': [
+              {'text': userMessage},
+            ],
+          },
+        ],
         'system_instruction': {
           'parts': [
             {'text': systemPrompt},
           ],
+        },
+        if (tools != null && tools.isNotEmpty)
+          'tools': [
+            {'function_declarations': tools},
+          ],
+        'tool_config': {
+          'function_calling_config': {'mode': 'AUTO'},
         },
       };
 
@@ -55,11 +58,9 @@ class GeminiHttpClient {
 
       final json = jsonDecode(responseBody);
 
-      // Extract text from candidates
       try {
-        final text =
-            json['candidates'][0]['content']['parts'][0]['text'] as String;
-        return text;
+        final content = json['candidates'][0]['content'];
+        return content;
       } catch (e) {
         throw Exception('Unexpected response format: $responseBody');
       }

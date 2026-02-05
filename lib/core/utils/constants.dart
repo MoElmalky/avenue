@@ -17,6 +17,13 @@ class AppColors {
   static const Color creamTan = Color(0xFFF0C38E);
   static const Color salmonPink = Color(0xFFF1AA9B);
 
+  // Category Colors
+  static const Color categoryWork = Color(0xFF48426D);
+  static const Color categoryPersonal = Color(0xFFF0C38E);
+  static const Color categoryHealth = Color(0xFFF1AA9B);
+  static const Color categoryMeeting = Color(0xFF312C51);
+  static const Color categoryOther = Color(0xFF9E9E9E);
+
   // Backgrounds
   static const Color lightBg = Color(0xFFF5F5F7);
   static const Color darkBg = Color(0xFF121212);
@@ -24,4 +31,20 @@ class AppColors {
   // Text
   static const Color lightText = Color(0xFF1A1A2E);
   static const Color darkText = Color(0xFFF5F7FA);
+
+  static Color getCategoryColor(String category) {
+    switch (category.toLowerCase()) {
+      case 'work':
+        return categoryWork;
+      case 'personal':
+        return categoryPersonal;
+      case 'health':
+        return categoryHealth;
+      case 'meeting':
+        return categoryMeeting;
+      case 'other':
+      default:
+        return categoryOther;
+    }
+  }
 }

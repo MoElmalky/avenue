@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 import '../../data/models/chat_model.dart';
-import '../../../ai_chat/presentation/logic/chat_state.dart';
+import 'chat_state.dart';
 
 abstract class ChatSessionState extends Equatable {
   const ChatSessionState();

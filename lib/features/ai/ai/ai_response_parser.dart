@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'ai_action_models.dart';
 
 class AiResponseParser {
@@ -37,17 +38,12 @@ class AiResponseParser {
 
       if (decoded is Map<String, dynamic>) {
         final message = decoded['message'] as String? ?? '';
-        final actionsRaw = decoded['actions'] as List<dynamic>? ?? [];
         final suggestedTitle = decoded['suggested_chat_title'] as String?;
 
-        final actions = actionsRaw.map((a) {
-          try {
-            return AiAction.fromJson(a as Map<String, dynamic>);
-          } catch (e) {
-            print('Error parsing individual action: $e');
-            return AiAction.unknown(rawResponse: a.toString());
-          }
-        }).toList();
+        final actionsList = decoded['actions'] as List? ?? [];
+        final actions = actionsList
+            .map((a) => AiAction.fromJson(a as Map<String, dynamic>))
+            .toList();
 
         return (message, actions, suggestedTitle);
       }

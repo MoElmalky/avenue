@@ -16,62 +16,40 @@ class DatabaseService {
 
     return await openDatabase(
       path,
-      version: 7, // Increment version
+      version: 11, // Added order_index removed
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
   }
 
   Future<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {
-    if (oldVersion < 2) {
-      // For this migration, we'll drop and recreate to ensure clean schema alignment
+    if (oldVersion < 8) {
       await db.execute('DROP TABLE IF EXISTS tasks');
+      await db.execute('DROP TABLE IF EXISTS default_tasks');
       await _createDB(db, newVersion);
     }
-    if (oldVersion < 3) {
-      // Add default_tasks table
-      await db.execute('''
-        CREATE TABLE IF NOT EXISTS default_tasks (
-          id TEXT PRIMARY KEY,
-          name TEXT NOT NULL,
-          desc TEXT,
-          start_time TEXT NOT NULL,
-          end_time TEXT NOT NULL,
-          category TEXT NOT NULL,
-          color_value INTEGER NOT NULL,
-          weekdays TEXT NOT NULL,
-          importance_type TEXT,
-          server_updated_at TEXT NOT NULL DEFAULT '', 
-          is_deleted INTEGER NOT NULL DEFAULT 0
-        )
-      ''');
-    } else if (oldVersion < 4) {
-      // Add missing sync columns if already on v3
-      await db.execute(
-        'ALTER TABLE default_tasks ADD COLUMN server_updated_at TEXT NOT NULL DEFAULT ""',
-      );
-      await db.execute(
-        'ALTER TABLE default_tasks ADD COLUMN is_deleted INTEGER NOT NULL DEFAULT 0',
-      );
-    }
-    if (oldVersion < 5) {
-      // Add is_dirty column to track local changes for delta sync
-      await db.execute(
-        'ALTER TABLE tasks ADD COLUMN is_dirty INTEGER NOT NULL DEFAULT 0',
-      );
-      await db.execute(
-        'ALTER TABLE default_tasks ADD COLUMN is_dirty INTEGER NOT NULL DEFAULT 0',
-      );
-    }
-    if (oldVersion < 6) {
-      // Add embedding column for semantic search
-      await db.execute('ALTER TABLE tasks ADD COLUMN embedding TEXT');
-      await db.execute('ALTER TABLE default_tasks ADD COLUMN embedding TEXT');
-    }
-    if (oldVersion < 7) {
-      // Add hide_on for default tasks and default_task_id for regular tasks
-      await db.execute('ALTER TABLE default_tasks ADD COLUMN hide_on TEXT');
-      await db.execute('ALTER TABLE tasks ADD COLUMN default_task_id TEXT');
+
+    if (oldVersion >= 9 && oldVersion < 11) {
+      // Migration to remove order_index if it exists
+      try {
+        final tableInfo = await db.rawQuery('PRAGMA table_info(tasks)');
+        final hasOrderIndex = tableInfo.any(
+          (column) => column['name'] == 'order_index',
+        );
+
+        if (hasOrderIndex) {
+          await db.execute('ALTER TABLE tasks RENAME TO tasks_old');
+          await _createDB(db, newVersion);
+          await db.execute('''
+            INSERT INTO tasks (id, name, desc, task_date, start_time, end_time, completed, category, one_time, is_deleted, server_updated_at, importance_type, is_dirty, embedding, default_task_id)
+            SELECT id, name, desc, task_date, start_time, end_time, completed, category, one_time, is_deleted, server_updated_at, importance_type, is_dirty, embedding, default_task_id
+            FROM tasks_old
+          ''');
+          await db.execute('DROP TABLE tasks_old');
+        }
+      } catch (e) {
+        print('DB Migration Error: $e');
+      }
     }
   }
 
@@ -87,7 +65,6 @@ class DatabaseService {
         end_time TEXT,
         completed INTEGER NOT NULL DEFAULT 0,
         category TEXT NOT NULL,
-        color_value INTEGER NOT NULL,
         one_time INTEGER NOT NULL DEFAULT 1,
         is_deleted INTEGER NOT NULL DEFAULT 0,
         server_updated_at TEXT NOT NULL,
@@ -107,7 +84,6 @@ class DatabaseService {
         start_time TEXT NOT NULL,
         end_time TEXT NOT NULL,
         category TEXT NOT NULL,
-        color_value INTEGER NOT NULL,
         weekdays TEXT NOT NULL,
         importance_type TEXT,
         server_updated_at TEXT NOT NULL,

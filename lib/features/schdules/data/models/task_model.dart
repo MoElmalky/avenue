@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
+import '../../../../core/utils/constants.dart';
 
 class TaskModel {
   final String id;
@@ -10,7 +11,6 @@ class TaskModel {
   final DateTime? endTime;
   final bool completed;
   final String category;
-  final int colorValue;
   final bool oneTime;
   final bool isDeleted;
   final DateTime serverUpdatedAt;
@@ -28,7 +28,6 @@ class TaskModel {
     this.endTime,
     this.completed = false,
     required this.category,
-    required this.colorValue,
     bool? oneTime,
     bool? isDeleted,
     DateTime? serverUpdatedAt,
@@ -52,15 +51,12 @@ class TaskModel {
       'end_time': endTime?.toIso8601String(),
       'completed': completed ? 1 : 0,
       'category': category,
-      'color_value': colorValue,
       'one_time': oneTime ? 1 : 0,
       'is_deleted': isDeleted ? 1 : 0,
       'server_updated_at': serverUpdatedAt.toIso8601String(),
       'importance_type': importanceType,
       'is_dirty': isDirty ? 1 : 0,
-      'embedding': embedding != null
-          ? embedding!.join(',')
-          : null, // Store as CSV string locally
+      'embedding': embedding?.join(','), // Store as CSV string locally
       'default_task_id': defaultTaskId,
     };
   }
@@ -78,8 +74,7 @@ class TaskModel {
           : null,
       endTime: map['end_time'] != null ? DateTime.parse(map['end_time']) : null,
       completed: (map['completed'] ?? map['is_done']) == 1,
-      category: map['category'] ?? 'Meeting',
-      colorValue: map['color_value'] ?? 0xFF004D61,
+      category: map['category'] ?? 'Other',
       oneTime: (map['one_time'] ?? 1) == 1,
       isDeleted: (map['is_deleted'] ?? 0) == 1,
       serverUpdatedAt: DateTime.parse(
@@ -117,7 +112,6 @@ class TaskModel {
           .substring(0, 8), // HH:mm:ss
       'completed': completed,
       'category': category,
-      'color_value': colorValue,
       'one_time': oneTime,
       'is_deleted': isDeleted,
       'server_updated_at': serverUpdatedAt.toIso8601String(),
@@ -148,13 +142,11 @@ class TaskModel {
 
     List<double>? parsedEmbedding;
     if (json['embedding'] != null) {
-      // Supabase returns vector as string like "[0.1, 0.2, ...]" or List<dynamic> depending on client
       if (json['embedding'] is List) {
         parsedEmbedding = (json['embedding'] as List)
             .map((e) => (e as num).toDouble())
             .toList();
       } else if (json['embedding'] is String) {
-        // Handle string representation if needed, though usually client decodes or returns string
         final s = json['embedding'] as String;
         if (s.startsWith('[') && s.endsWith(']')) {
           parsedEmbedding = s
@@ -174,8 +166,7 @@ class TaskModel {
       startTime: parseTime(json['start_time'], date),
       endTime: parseTime(json['end_time'], date),
       completed: json['completed'] ?? false,
-      category: json['category'] ?? 'Meeting',
-      colorValue: json['color_value'] ?? 0xFF004D61,
+      category: json['category'] ?? 'Other',
       oneTime: json['one_time'] ?? true,
       isDeleted: json['is_deleted'] ?? false,
       serverUpdatedAt: json['server_updated_at'] != null
@@ -187,8 +178,8 @@ class TaskModel {
     );
   }
 
-  // Helper to get Color from colorValue
-  Color get color => Color(colorValue);
+  // Helper to get Color based on category
+  Color get color => AppColors.getCategoryColor(category);
 
   // Helper to get duration in minutes
   int get durationInMinutes {
@@ -215,7 +206,6 @@ class TaskModel {
     required DateTime taskDate,
     bool completed = false,
     required String category,
-    required Color color,
     bool oneTime = true,
     String? importanceType,
     String? defaultTaskId,
@@ -246,7 +236,6 @@ class TaskModel {
       taskDate: normalizedDate,
       completed: completed,
       category: category,
-      colorValue: color.value,
       oneTime: oneTime,
       importanceType: importanceType,
       defaultTaskId: defaultTaskId,
@@ -261,13 +250,13 @@ class TaskModel {
     DateTime? endTime,
     bool? completed,
     String? category,
-    int? colorValue,
     bool? oneTime,
     bool? isDeleted,
     DateTime? serverUpdatedAt,
     String? importanceType,
     List<double>? embedding,
     bool? isDirty,
+    String? defaultTaskId,
   }) {
     return TaskModel(
       id: id,
@@ -278,7 +267,6 @@ class TaskModel {
       endTime: endTime ?? this.endTime,
       completed: completed ?? this.completed,
       category: category ?? this.category,
-      colorValue: colorValue ?? this.colorValue,
       oneTime: oneTime ?? this.oneTime,
       isDeleted: isDeleted ?? this.isDeleted,
       serverUpdatedAt: serverUpdatedAt ?? DateTime.now().toUtc(),
@@ -294,7 +282,7 @@ class TaskModel {
   static String generatePredictableId(String defaultTaskId, DateTime date) {
     final dateStr = date.toIso8601String().split('T')[0]; // YYYY-MM-DD
     return const Uuid().v5(
-      Uuid.NAMESPACE_URL,
+      '6ba7b811-9dad-11d1-80b4-00c04fd430c8',
       "default_${defaultTaskId}_$dateStr",
     );
   }

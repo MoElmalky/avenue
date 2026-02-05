@@ -305,11 +305,11 @@ class _AddTaskViewState extends State<AddTaskView> {
       controller: controller,
       validator: validator,
       maxLines: maxLines,
-      style: TextStyle(color: theme.colorScheme.onBackground, fontSize: 16),
+      style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 16),
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: TextStyle(
-          color: theme.colorScheme.onBackground.withOpacity(0.3),
+          color: theme.colorScheme.onSurface.withOpacity(0.3),
           fontSize: 15,
         ),
         prefixIcon: Icon(
@@ -511,14 +511,7 @@ class _AddTaskViewState extends State<AddTaskView> {
   }
 
   Widget _buildCategorySelector() {
-    final categories = [
-      'Work',
-      'Meeting',
-      'Important',
-      'Personal',
-      'Health',
-      'Break',
-    ];
+    final categories = ['Work', 'Meeting', 'Personal', 'Health', 'Other'];
     return SizedBox(
       height: 44,
       child: ListView.separated(
@@ -627,7 +620,6 @@ class _AddTaskViewState extends State<AddTaskView> {
           endTime: _endTime!,
           taskDate: _selectedDate ?? DateTime.now(),
           category: _selectedCategory,
-          color: _getCategoryColor(_selectedCategory),
           completed: widget.task?.completed ?? false,
           importanceType: _selectedImportance,
           oneTime: true,
@@ -652,7 +644,6 @@ class _AddTaskViewState extends State<AddTaskView> {
       startTime: _startTime!,
       endTime: _endTime!,
       category: _selectedCategory,
-      colorValue: _getCategoryColor(_selectedCategory).value,
       weekdays: _selectedWeekdays,
       importanceType: _selectedImportance,
     );
@@ -661,21 +652,6 @@ class _AddTaskViewState extends State<AddTaskView> {
   }
 
   Color _getCategoryColor(String category) {
-    switch (category) {
-      case 'Meeting':
-        return Colors.redAccent;
-      case 'Work':
-        return AppColors.slatePurple;
-      case 'Important':
-        return Colors.red;
-      case 'Break':
-        return Colors.green;
-      case 'Personal':
-        return Colors.blue;
-      case 'Health':
-        return Colors.purple;
-      default:
-        return AppColors.slatePurple;
-    }
+    return AppColors.getCategoryColor(category);
   }
 }

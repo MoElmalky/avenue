@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import '../../../ai/ai_orchestrator/ai_action_models.dart';
+import '../../ai/ai_action_models.dart';
 
 abstract class ChatState extends Equatable {
   const ChatState();

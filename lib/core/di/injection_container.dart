@@ -1,11 +1,11 @@
+import '../../features/ai/ai/ai_orchestrator.dart';
 import 'package:get_it/get_it.dart';
 import '../../features/schdules/data/datasources/task_local_data_source.dart';
 import '../../features/schdules/data/datasources/task_local_data_source_impl.dart';
 import '../../features/schdules/data/repo/schedule_repo_impl.dart';
 import '../../features/schdules/domain/repo/schedule_repository.dart';
 import '../../features/schdules/presentation/cubit/task_cubit.dart';
-import '../../features/ai/ai_orchestrator/ai_orchestrator.dart';
-import '../../features/ai_chat/presentation/logic/chat_cubit.dart';
+import '../../features/ai/presentation/logic/chat_cubit.dart';
 import '../services/embedding_service.dart';
 import '../../features/weeks/domain/repo/weekly_repository.dart';
 import '../../features/weeks/data/repo/weekly_repo_impl.dart';
@@ -20,7 +20,7 @@ import '../../features/auth/data/repo/auth_repository_impl.dart';
 import '../../features/auth/domain/repo/auth_repository.dart';
 import '../../features/auth/presentation/cubit/auth_cubit.dart';
 import '../logic/theme_cubit.dart';
-import '../../features/ai_chat/data/repository/chat_repository.dart';
+import '../../features/ai/data/repositories/chat_repository.dart';
 
 final sl = GetIt.instance;
 
@@ -80,6 +80,7 @@ Future<void> initializeDependencies() async {
     () => AiOrchestrator(
       apiKey: dotenv.env['GEMINI_API_KEY'] ?? '',
       scheduleRepository: sl(),
+      embeddingService: sl(),
     ),
   );
 
