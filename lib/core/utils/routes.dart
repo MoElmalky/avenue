@@ -6,7 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../features/roots.dart';
 import '../../features/auth/presentation/views/login_view.dart';
 import '../../features/auth/presentation/views/register_view.dart';
-import '../../features/ai_chat/presentation/views/ai_chat_view.dart';
+import '../../features/ai/presentation/views/ai_chat_view.dart';
 
 import '../../features/settings/presentation/views/settings_view.dart';
 

@@ -66,4 +66,7 @@ abstract class ScheduleRepository {
 
   /// Update a default task (e.g., for hiding on specific dates)
   Future<Either<Failure, void>> updateDefaultTask(DefaultTaskModel task);
+
+  /// Get a default task by ID
+  Future<Either<Failure, DefaultTaskModel?>> getDefaultTaskById(String id);
 }

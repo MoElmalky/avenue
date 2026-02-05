@@ -23,9 +23,9 @@ class DatabaseService {
   }
 
   Future<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {
-    if (oldVersion < 2) {
-      // For this migration, we'll drop and recreate to ensure clean schema alignment
+    if (oldVersion < 8) {
       await db.execute('DROP TABLE IF EXISTS tasks');
+      await db.execute('DROP TABLE IF EXISTS default_tasks');
       await _createDB(db, newVersion);
     }
     if (oldVersion < 3) {
@@ -102,7 +102,6 @@ class DatabaseService {
         end_time TEXT,
         completed INTEGER NOT NULL DEFAULT 0,
         category TEXT NOT NULL,
-        color_value INTEGER NOT NULL,
         one_time INTEGER NOT NULL DEFAULT 1,
         is_deleted INTEGER NOT NULL DEFAULT 0,
         server_updated_at TEXT NOT NULL,
@@ -121,7 +120,6 @@ class DatabaseService {
         start_time TEXT NOT NULL,
         end_time TEXT NOT NULL,
         category TEXT NOT NULL,
-        color_value INTEGER NOT NULL,
         weekdays TEXT NOT NULL,
         importance_type TEXT,
         server_updated_at TEXT NOT NULL,

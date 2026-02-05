@@ -1,5 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../data/repository/chat_repository.dart';
+import '../../data/repositories/chat_repository.dart';
 import 'chat_session_state.dart';
 import 'chat_state.dart';
 

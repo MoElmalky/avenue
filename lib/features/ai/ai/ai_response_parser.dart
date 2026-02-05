@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'ai_action_models.dart';
 
 class AiResponseParser {
@@ -37,17 +38,30 @@ class AiResponseParser {
 
       if (decoded is Map<String, dynamic>) {
         final message = decoded['message'] as String? ?? '';
-        final actionsRaw = decoded['actions'] as List<dynamic>? ?? [];
         final suggestedTitle = decoded['suggested_chat_title'] as String?;
 
-        final actions = actionsRaw.map((a) {
-          try {
-            return AiAction.fromJson(a as Map<String, dynamic>);
-          } catch (e) {
-            print('Error parsing individual action: $e');
-            return AiAction.unknown(rawResponse: a.toString());
-          }
-        }).toList();
+        List<AiAction> actions = [];
+        try {
+          final actionsList = decoded['actions'] as List? ?? [];
+          actions = actionsList.map((a) {
+            try {
+              final map = Map<String, dynamic>.from(a as Map);
+              // Normalize type to match AiAction union keys
+              // Model now expects 'createTask', 'updateTask', 'deleteTask'
+              if (map['type'] == 'addTask') {
+                map['type'] = 'createTask';
+              }
+              return AiAction.fromJson(map);
+            } catch (e) {
+              print('Error parsing single action: $e');
+              return const AiAction.unknown(
+                rawResponse: 'Invalid action format',
+              );
+            }
+          }).toList();
+        } catch (e) {
+          print('Error parsing actions list: $e');
+        }
 
         return (message, actions, suggestedTitle);
       }

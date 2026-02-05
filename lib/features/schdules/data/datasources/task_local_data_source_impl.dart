@@ -30,7 +30,7 @@ class TaskLocalDataSourceImpl implements TaskLocalDataSource {
 
       return List.generate(maps.length, (i) => TaskModel.fromMap(maps[i]));
     } catch (e) {
-      throw CacheException(ErrorMessages.loadTasksFailed);
+      throw CacheException(e.toString());
     }
   }
 
@@ -285,6 +285,25 @@ class TaskLocalDataSourceImpl implements TaskLocalDataSource {
       return {'first': firstDate, 'last': lastDate};
     } catch (e) {
       throw CacheException('Failed to get date bounds');
+    }
+  }
+
+  @override
+  Future<DefaultTaskModel?> getDefaultTaskById(String id) async {
+    try {
+      final db = await databaseService.database;
+      final maps = await db.query(
+        'default_tasks',
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+
+      if (maps.isNotEmpty) {
+        return DefaultTaskModel.fromMap(maps.first);
+      }
+      return null;
+    } catch (e) {
+      throw CacheException('Failed to get default task');
     }
   }
 }

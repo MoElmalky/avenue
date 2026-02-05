@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:avenue/features/schdules/presentation/views/schedule_view.dart';
 import 'package:avenue/features/weeks/presentation/cubit/weekly_cubit.dart';
 import 'package:avenue/features/weeks/presentation/pages/weekly_calendar_page.dart';
-import 'package:avenue/features/ai_chat/presentation/widgets/animated_ai_button.dart';
+import 'package:avenue/features/ai/presentation/widgets/animated_ai_button.dart';
 import 'package:avenue/features/settings/presentation/views/settings_view.dart';
 import 'package:go_router/go_router.dart';
 import '../core/di/injection_container.dart';

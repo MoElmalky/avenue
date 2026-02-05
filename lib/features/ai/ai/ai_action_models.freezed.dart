@@ -27,16 +27,20 @@ AiAction _$AiActionFromJson(
           return DeleteTaskAction.fromJson(
             json
           );
-                case 'reorderDay':
-          return ReorderDayAction.fromJson(
-            json
-          );
                 case 'updateSettings':
           return UpdateSettingsAction.fromJson(
             json
           );
                 case 'createDefaultTask':
           return CreateDefaultTaskAction.fromJson(
+            json
+          );
+                case 'updateDefaultTask':
+          return UpdateDefaultTaskAction.fromJson(
+            json
+          );
+                case 'deleteDefaultTask':
+          return DeleteDefaultTaskAction.fromJson(
             json
           );
                 case 'unknown':
@@ -101,16 +105,17 @@ extension AiActionPatterns on AiAction {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( CreateTaskAction value)?  createTask,TResult Function( UpdateTaskAction value)?  updateTask,TResult Function( DeleteTaskAction value)?  deleteTask,TResult Function( ReorderDayAction value)?  reorderDay,TResult Function( UpdateSettingsAction value)?  updateSettings,TResult Function( CreateDefaultTaskAction value)?  createDefaultTask,TResult Function( UnknownAction value)?  unknown,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( CreateTaskAction value)?  createTask,TResult Function( UpdateTaskAction value)?  updateTask,TResult Function( DeleteTaskAction value)?  deleteTask,TResult Function( UpdateSettingsAction value)?  updateSettings,TResult Function( CreateDefaultTaskAction value)?  createDefaultTask,TResult Function( UpdateDefaultTaskAction value)?  updateDefaultTask,TResult Function( DeleteDefaultTaskAction value)?  deleteDefaultTask,TResult Function( UnknownAction value)?  unknown,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case CreateTaskAction() when createTask != null:
 return createTask(_that);case UpdateTaskAction() when updateTask != null:
 return updateTask(_that);case DeleteTaskAction() when deleteTask != null:
-return deleteTask(_that);case ReorderDayAction() when reorderDay != null:
-return reorderDay(_that);case UpdateSettingsAction() when updateSettings != null:
+return deleteTask(_that);case UpdateSettingsAction() when updateSettings != null:
 return updateSettings(_that);case CreateDefaultTaskAction() when createDefaultTask != null:
-return createDefaultTask(_that);case UnknownAction() when unknown != null:
+return createDefaultTask(_that);case UpdateDefaultTaskAction() when updateDefaultTask != null:
+return updateDefaultTask(_that);case DeleteDefaultTaskAction() when deleteDefaultTask != null:
+return deleteDefaultTask(_that);case UnknownAction() when unknown != null:
 return unknown(_that);case _:
   return orElse();
 
@@ -129,16 +134,17 @@ return unknown(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( CreateTaskAction value)  createTask,required TResult Function( UpdateTaskAction value)  updateTask,required TResult Function( DeleteTaskAction value)  deleteTask,required TResult Function( ReorderDayAction value)  reorderDay,required TResult Function( UpdateSettingsAction value)  updateSettings,required TResult Function( CreateDefaultTaskAction value)  createDefaultTask,required TResult Function( UnknownAction value)  unknown,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( CreateTaskAction value)  createTask,required TResult Function( UpdateTaskAction value)  updateTask,required TResult Function( DeleteTaskAction value)  deleteTask,required TResult Function( UpdateSettingsAction value)  updateSettings,required TResult Function( CreateDefaultTaskAction value)  createDefaultTask,required TResult Function( UpdateDefaultTaskAction value)  updateDefaultTask,required TResult Function( DeleteDefaultTaskAction value)  deleteDefaultTask,required TResult Function( UnknownAction value)  unknown,}){
 final _that = this;
 switch (_that) {
 case CreateTaskAction():
 return createTask(_that);case UpdateTaskAction():
 return updateTask(_that);case DeleteTaskAction():
-return deleteTask(_that);case ReorderDayAction():
-return reorderDay(_that);case UpdateSettingsAction():
+return deleteTask(_that);case UpdateSettingsAction():
 return updateSettings(_that);case CreateDefaultTaskAction():
-return createDefaultTask(_that);case UnknownAction():
+return createDefaultTask(_that);case UpdateDefaultTaskAction():
+return updateDefaultTask(_that);case DeleteDefaultTaskAction():
+return deleteDefaultTask(_that);case UnknownAction():
 return unknown(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
@@ -153,16 +159,17 @@ return unknown(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( CreateTaskAction value)?  createTask,TResult? Function( UpdateTaskAction value)?  updateTask,TResult? Function( DeleteTaskAction value)?  deleteTask,TResult? Function( ReorderDayAction value)?  reorderDay,TResult? Function( UpdateSettingsAction value)?  updateSettings,TResult? Function( CreateDefaultTaskAction value)?  createDefaultTask,TResult? Function( UnknownAction value)?  unknown,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( CreateTaskAction value)?  createTask,TResult? Function( UpdateTaskAction value)?  updateTask,TResult? Function( DeleteTaskAction value)?  deleteTask,TResult? Function( UpdateSettingsAction value)?  updateSettings,TResult? Function( CreateDefaultTaskAction value)?  createDefaultTask,TResult? Function( UpdateDefaultTaskAction value)?  updateDefaultTask,TResult? Function( DeleteDefaultTaskAction value)?  deleteDefaultTask,TResult? Function( UnknownAction value)?  unknown,}){
 final _that = this;
 switch (_that) {
 case CreateTaskAction() when createTask != null:
 return createTask(_that);case UpdateTaskAction() when updateTask != null:
 return updateTask(_that);case DeleteTaskAction() when deleteTask != null:
-return deleteTask(_that);case ReorderDayAction() when reorderDay != null:
-return reorderDay(_that);case UpdateSettingsAction() when updateSettings != null:
+return deleteTask(_that);case UpdateSettingsAction() when updateSettings != null:
 return updateSettings(_that);case CreateDefaultTaskAction() when createDefaultTask != null:
-return createDefaultTask(_that);case UnknownAction() when unknown != null:
+return createDefaultTask(_that);case UpdateDefaultTaskAction() when updateDefaultTask != null:
+return updateDefaultTask(_that);case DeleteDefaultTaskAction() when deleteDefaultTask != null:
+return deleteDefaultTask(_that);case UnknownAction() when unknown != null:
 return unknown(_that);case _:
   return null;
 
@@ -180,15 +187,16 @@ return unknown(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String name,  DateTime date,  String? startTime,  String? endTime,  String importance,  String? note)?  createTask,TResult Function( String id,  String? name,  DateTime? date,  String? startTime,  String? endTime,  String? importance,  String? note,  bool? isDone)?  updateTask,TResult Function( String id)?  deleteTask,TResult Function( DateTime date,  List<String> taskIdsInOrder)?  reorderDay,TResult Function( String? theme,  String? language,  bool? notificationsEnabled)?  updateSettings,TResult Function( String name,  List<int> weekdays,  String startTime,  String endTime,  String importance,  String? note)?  createDefaultTask,TResult Function( String rawResponse)?  unknown,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String name,  DateTime date,  String? startTime,  String? endTime,  String importance,  String? note)?  createTask,TResult Function( String id,  String? name,  DateTime? date,  String? startTime,  String? endTime,  String? importance,  String? note,  bool? isDone)?  updateTask,TResult Function( String id)?  deleteTask,TResult Function( String? theme,  String? language,  bool? notificationsEnabled)?  updateSettings,TResult Function( String name,  List<int> weekdays,  String startTime,  String endTime,  String importance,  String? note)?  createDefaultTask,TResult Function( String id,  String? name,  List<int>? weekdays,  String? startTime,  String? endTime,  String? importance,  String? note)?  updateDefaultTask,TResult Function( String id)?  deleteDefaultTask,TResult Function( String rawResponse)?  unknown,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case CreateTaskAction() when createTask != null:
 return createTask(_that.name,_that.date,_that.startTime,_that.endTime,_that.importance,_that.note);case UpdateTaskAction() when updateTask != null:
 return updateTask(_that.id,_that.name,_that.date,_that.startTime,_that.endTime,_that.importance,_that.note,_that.isDone);case DeleteTaskAction() when deleteTask != null:
-return deleteTask(_that.id);case ReorderDayAction() when reorderDay != null:
-return reorderDay(_that.date,_that.taskIdsInOrder);case UpdateSettingsAction() when updateSettings != null:
+return deleteTask(_that.id);case UpdateSettingsAction() when updateSettings != null:
 return updateSettings(_that.theme,_that.language,_that.notificationsEnabled);case CreateDefaultTaskAction() when createDefaultTask != null:
-return createDefaultTask(_that.name,_that.weekdays,_that.startTime,_that.endTime,_that.importance,_that.note);case UnknownAction() when unknown != null:
+return createDefaultTask(_that.name,_that.weekdays,_that.startTime,_that.endTime,_that.importance,_that.note);case UpdateDefaultTaskAction() when updateDefaultTask != null:
+return updateDefaultTask(_that.id,_that.name,_that.weekdays,_that.startTime,_that.endTime,_that.importance,_that.note);case DeleteDefaultTaskAction() when deleteDefaultTask != null:
+return deleteDefaultTask(_that.id);case UnknownAction() when unknown != null:
 return unknown(_that.rawResponse);case _:
   return orElse();
 
@@ -207,15 +215,16 @@ return unknown(_that.rawResponse);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String name,  DateTime date,  String? startTime,  String? endTime,  String importance,  String? note)  createTask,required TResult Function( String id,  String? name,  DateTime? date,  String? startTime,  String? endTime,  String? importance,  String? note,  bool? isDone)  updateTask,required TResult Function( String id)  deleteTask,required TResult Function( DateTime date,  List<String> taskIdsInOrder)  reorderDay,required TResult Function( String? theme,  String? language,  bool? notificationsEnabled)  updateSettings,required TResult Function( String name,  List<int> weekdays,  String startTime,  String endTime,  String importance,  String? note)  createDefaultTask,required TResult Function( String rawResponse)  unknown,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String name,  DateTime date,  String? startTime,  String? endTime,  String importance,  String? note)  createTask,required TResult Function( String id,  String? name,  DateTime? date,  String? startTime,  String? endTime,  String? importance,  String? note,  bool? isDone)  updateTask,required TResult Function( String id)  deleteTask,required TResult Function( String? theme,  String? language,  bool? notificationsEnabled)  updateSettings,required TResult Function( String name,  List<int> weekdays,  String startTime,  String endTime,  String importance,  String? note)  createDefaultTask,required TResult Function( String id,  String? name,  List<int>? weekdays,  String? startTime,  String? endTime,  String? importance,  String? note)  updateDefaultTask,required TResult Function( String id)  deleteDefaultTask,required TResult Function( String rawResponse)  unknown,}) {final _that = this;
 switch (_that) {
 case CreateTaskAction():
 return createTask(_that.name,_that.date,_that.startTime,_that.endTime,_that.importance,_that.note);case UpdateTaskAction():
 return updateTask(_that.id,_that.name,_that.date,_that.startTime,_that.endTime,_that.importance,_that.note,_that.isDone);case DeleteTaskAction():
-return deleteTask(_that.id);case ReorderDayAction():
-return reorderDay(_that.date,_that.taskIdsInOrder);case UpdateSettingsAction():
+return deleteTask(_that.id);case UpdateSettingsAction():
 return updateSettings(_that.theme,_that.language,_that.notificationsEnabled);case CreateDefaultTaskAction():
-return createDefaultTask(_that.name,_that.weekdays,_that.startTime,_that.endTime,_that.importance,_that.note);case UnknownAction():
+return createDefaultTask(_that.name,_that.weekdays,_that.startTime,_that.endTime,_that.importance,_that.note);case UpdateDefaultTaskAction():
+return updateDefaultTask(_that.id,_that.name,_that.weekdays,_that.startTime,_that.endTime,_that.importance,_that.note);case DeleteDefaultTaskAction():
+return deleteDefaultTask(_that.id);case UnknownAction():
 return unknown(_that.rawResponse);}
 }
 /// A variant of `when` that fallback to returning `null`
@@ -230,15 +239,16 @@ return unknown(_that.rawResponse);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String name,  DateTime date,  String? startTime,  String? endTime,  String importance,  String? note)?  createTask,TResult? Function( String id,  String? name,  DateTime? date,  String? startTime,  String? endTime,  String? importance,  String? note,  bool? isDone)?  updateTask,TResult? Function( String id)?  deleteTask,TResult? Function( DateTime date,  List<String> taskIdsInOrder)?  reorderDay,TResult? Function( String? theme,  String? language,  bool? notificationsEnabled)?  updateSettings,TResult? Function( String name,  List<int> weekdays,  String startTime,  String endTime,  String importance,  String? note)?  createDefaultTask,TResult? Function( String rawResponse)?  unknown,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String name,  DateTime date,  String? startTime,  String? endTime,  String importance,  String? note)?  createTask,TResult? Function( String id,  String? name,  DateTime? date,  String? startTime,  String? endTime,  String? importance,  String? note,  bool? isDone)?  updateTask,TResult? Function( String id)?  deleteTask,TResult? Function( String? theme,  String? language,  bool? notificationsEnabled)?  updateSettings,TResult? Function( String name,  List<int> weekdays,  String startTime,  String endTime,  String importance,  String? note)?  createDefaultTask,TResult? Function( String id,  String? name,  List<int>? weekdays,  String? startTime,  String? endTime,  String? importance,  String? note)?  updateDefaultTask,TResult? Function( String id)?  deleteDefaultTask,TResult? Function( String rawResponse)?  unknown,}) {final _that = this;
 switch (_that) {
 case CreateTaskAction() when createTask != null:
 return createTask(_that.name,_that.date,_that.startTime,_that.endTime,_that.importance,_that.note);case UpdateTaskAction() when updateTask != null:
 return updateTask(_that.id,_that.name,_that.date,_that.startTime,_that.endTime,_that.importance,_that.note,_that.isDone);case DeleteTaskAction() when deleteTask != null:
-return deleteTask(_that.id);case ReorderDayAction() when reorderDay != null:
-return reorderDay(_that.date,_that.taskIdsInOrder);case UpdateSettingsAction() when updateSettings != null:
+return deleteTask(_that.id);case UpdateSettingsAction() when updateSettings != null:
 return updateSettings(_that.theme,_that.language,_that.notificationsEnabled);case CreateDefaultTaskAction() when createDefaultTask != null:
-return createDefaultTask(_that.name,_that.weekdays,_that.startTime,_that.endTime,_that.importance,_that.note);case UnknownAction() when unknown != null:
+return createDefaultTask(_that.name,_that.weekdays,_that.startTime,_that.endTime,_that.importance,_that.note);case UpdateDefaultTaskAction() when updateDefaultTask != null:
+return updateDefaultTask(_that.id,_that.name,_that.weekdays,_that.startTime,_that.endTime,_that.importance,_that.note);case DeleteDefaultTaskAction() when deleteDefaultTask != null:
+return deleteDefaultTask(_that.id);case UnknownAction() when unknown != null:
 return unknown(_that.rawResponse);case _:
   return null;
 
@@ -493,87 +503,6 @@ as String,
 /// @nodoc
 @JsonSerializable()
 
-class ReorderDayAction implements AiAction {
-  const ReorderDayAction({required this.date, required final  List<String> taskIdsInOrder, final  String? $type}): _taskIdsInOrder = taskIdsInOrder,$type = $type ?? 'reorderDay';
-  factory ReorderDayAction.fromJson(Map<String, dynamic> json) => _$ReorderDayActionFromJson(json);
-
- final  DateTime date;
- final  List<String> _taskIdsInOrder;
- List<String> get taskIdsInOrder {
-  if (_taskIdsInOrder is EqualUnmodifiableListView) return _taskIdsInOrder;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableListView(_taskIdsInOrder);
-}
-
-
-@JsonKey(name: 'type')
-final String $type;
-
-
-/// Create a copy of AiAction
-/// with the given fields replaced by the non-null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-$ReorderDayActionCopyWith<ReorderDayAction> get copyWith => _$ReorderDayActionCopyWithImpl<ReorderDayAction>(this, _$identity);
-
-@override
-Map<String, dynamic> toJson() {
-  return _$ReorderDayActionToJson(this, );
-}
-
-@override
-bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ReorderDayAction&&(identical(other.date, date) || other.date == date)&&const DeepCollectionEquality().equals(other._taskIdsInOrder, _taskIdsInOrder));
-}
-
-@JsonKey(includeFromJson: false, includeToJson: false)
-@override
-int get hashCode => Object.hash(runtimeType,date,const DeepCollectionEquality().hash(_taskIdsInOrder));
-
-@override
-String toString() {
-  return 'AiAction.reorderDay(date: $date, taskIdsInOrder: $taskIdsInOrder)';
-}
-
-
-}
-
-/// @nodoc
-abstract mixin class $ReorderDayActionCopyWith<$Res> implements $AiActionCopyWith<$Res> {
-  factory $ReorderDayActionCopyWith(ReorderDayAction value, $Res Function(ReorderDayAction) _then) = _$ReorderDayActionCopyWithImpl;
-@useResult
-$Res call({
- DateTime date, List<String> taskIdsInOrder
-});
-
-
-
-
-}
-/// @nodoc
-class _$ReorderDayActionCopyWithImpl<$Res>
-    implements $ReorderDayActionCopyWith<$Res> {
-  _$ReorderDayActionCopyWithImpl(this._self, this._then);
-
-  final ReorderDayAction _self;
-  final $Res Function(ReorderDayAction) _then;
-
-/// Create a copy of AiAction
-/// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? date = null,Object? taskIdsInOrder = null,}) {
-  return _then(ReorderDayAction(
-date: null == date ? _self.date : date // ignore: cast_nullable_to_non_nullable
-as DateTime,taskIdsInOrder: null == taskIdsInOrder ? _self._taskIdsInOrder : taskIdsInOrder // ignore: cast_nullable_to_non_nullable
-as List<String>,
-  ));
-}
-
-
-}
-
-/// @nodoc
-@JsonSerializable()
-
 class UpdateSettingsAction implements AiAction {
   const UpdateSettingsAction({this.theme, this.language, this.notificationsEnabled, final  String? $type}): $type = $type ?? 'updateSettings';
   factory UpdateSettingsAction.fromJson(Map<String, dynamic> json) => _$UpdateSettingsActionFromJson(json);
@@ -732,6 +661,172 @@ as String,endTime: null == endTime ? _self.endTime : endTime // ignore: cast_nul
 as String,importance: null == importance ? _self.importance : importance // ignore: cast_nullable_to_non_nullable
 as String,note: freezed == note ? _self.note : note // ignore: cast_nullable_to_non_nullable
 as String?,
+  ));
+}
+
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class UpdateDefaultTaskAction implements AiAction {
+  const UpdateDefaultTaskAction({required this.id, this.name, final  List<int>? weekdays, this.startTime, this.endTime, this.importance, this.note, final  String? $type}): _weekdays = weekdays,$type = $type ?? 'updateDefaultTask';
+  factory UpdateDefaultTaskAction.fromJson(Map<String, dynamic> json) => _$UpdateDefaultTaskActionFromJson(json);
+
+ final  String id;
+ final  String? name;
+ final  List<int>? _weekdays;
+ List<int>? get weekdays {
+  final value = _weekdays;
+  if (value == null) return null;
+  if (_weekdays is EqualUnmodifiableListView) return _weekdays;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(value);
+}
+
+ final  String? startTime;
+ final  String? endTime;
+ final  String? importance;
+ final  String? note;
+
+@JsonKey(name: 'type')
+final String $type;
+
+
+/// Create a copy of AiAction
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$UpdateDefaultTaskActionCopyWith<UpdateDefaultTaskAction> get copyWith => _$UpdateDefaultTaskActionCopyWithImpl<UpdateDefaultTaskAction>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$UpdateDefaultTaskActionToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is UpdateDefaultTaskAction&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&const DeepCollectionEquality().equals(other._weekdays, _weekdays)&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.endTime, endTime) || other.endTime == endTime)&&(identical(other.importance, importance) || other.importance == importance)&&(identical(other.note, note) || other.note == note));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,id,name,const DeepCollectionEquality().hash(_weekdays),startTime,endTime,importance,note);
+
+@override
+String toString() {
+  return 'AiAction.updateDefaultTask(id: $id, name: $name, weekdays: $weekdays, startTime: $startTime, endTime: $endTime, importance: $importance, note: $note)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $UpdateDefaultTaskActionCopyWith<$Res> implements $AiActionCopyWith<$Res> {
+  factory $UpdateDefaultTaskActionCopyWith(UpdateDefaultTaskAction value, $Res Function(UpdateDefaultTaskAction) _then) = _$UpdateDefaultTaskActionCopyWithImpl;
+@useResult
+$Res call({
+ String id, String? name, List<int>? weekdays, String? startTime, String? endTime, String? importance, String? note
+});
+
+
+
+
+}
+/// @nodoc
+class _$UpdateDefaultTaskActionCopyWithImpl<$Res>
+    implements $UpdateDefaultTaskActionCopyWith<$Res> {
+  _$UpdateDefaultTaskActionCopyWithImpl(this._self, this._then);
+
+  final UpdateDefaultTaskAction _self;
+  final $Res Function(UpdateDefaultTaskAction) _then;
+
+/// Create a copy of AiAction
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = freezed,Object? weekdays = freezed,Object? startTime = freezed,Object? endTime = freezed,Object? importance = freezed,Object? note = freezed,}) {
+  return _then(UpdateDefaultTaskAction(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,name: freezed == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String?,weekdays: freezed == weekdays ? _self._weekdays : weekdays // ignore: cast_nullable_to_non_nullable
+as List<int>?,startTime: freezed == startTime ? _self.startTime : startTime // ignore: cast_nullable_to_non_nullable
+as String?,endTime: freezed == endTime ? _self.endTime : endTime // ignore: cast_nullable_to_non_nullable
+as String?,importance: freezed == importance ? _self.importance : importance // ignore: cast_nullable_to_non_nullable
+as String?,note: freezed == note ? _self.note : note // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class DeleteDefaultTaskAction implements AiAction {
+  const DeleteDefaultTaskAction({required this.id, final  String? $type}): $type = $type ?? 'deleteDefaultTask';
+  factory DeleteDefaultTaskAction.fromJson(Map<String, dynamic> json) => _$DeleteDefaultTaskActionFromJson(json);
+
+ final  String id;
+
+@JsonKey(name: 'type')
+final String $type;
+
+
+/// Create a copy of AiAction
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$DeleteDefaultTaskActionCopyWith<DeleteDefaultTaskAction> get copyWith => _$DeleteDefaultTaskActionCopyWithImpl<DeleteDefaultTaskAction>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$DeleteDefaultTaskActionToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DeleteDefaultTaskAction&&(identical(other.id, id) || other.id == id));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,id);
+
+@override
+String toString() {
+  return 'AiAction.deleteDefaultTask(id: $id)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $DeleteDefaultTaskActionCopyWith<$Res> implements $AiActionCopyWith<$Res> {
+  factory $DeleteDefaultTaskActionCopyWith(DeleteDefaultTaskAction value, $Res Function(DeleteDefaultTaskAction) _then) = _$DeleteDefaultTaskActionCopyWithImpl;
+@useResult
+$Res call({
+ String id
+});
+
+
+
+
+}
+/// @nodoc
+class _$DeleteDefaultTaskActionCopyWithImpl<$Res>
+    implements $DeleteDefaultTaskActionCopyWith<$Res> {
+  _$DeleteDefaultTaskActionCopyWithImpl(this._self, this._then);
+
+  final DeleteDefaultTaskAction _self;
+  final $Res Function(DeleteDefaultTaskAction) _then;
+
+/// Create a copy of AiAction
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? id = null,}) {
+  return _then(DeleteDefaultTaskAction(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,
   ));
 }
 

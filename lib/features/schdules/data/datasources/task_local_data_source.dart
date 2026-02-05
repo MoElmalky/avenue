@@ -49,4 +49,7 @@ abstract class TaskLocalDataSource {
 
   /// Update a default task
   Future<void> updateDefaultTask(DefaultTaskModel task);
+
+  /// Get a default task by ID
+  Future<DefaultTaskModel?> getDefaultTaskById(String id);
 }
