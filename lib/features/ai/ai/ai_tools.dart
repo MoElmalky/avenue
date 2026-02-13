@@ -47,99 +47,60 @@ class AiTools {
       },
     },
     {
-      'name': 'addTask',
-      'description': 'Create a new one-time task on a specific date.',
+      'name': 'manageSchedule',
+      'description':
+          'Unified tool to create or update one-time tasks and recurring habits. Use this for ALL modifications to the schedule.',
       'parameters': {
         'type': 'OBJECT',
         'properties': {
+          'action': {
+            'type': 'STRING',
+            'enum': ['create', 'update'],
+            'description':
+                'Whether to create a new entry or update an existing one.',
+          },
+          'type': {
+            'type': 'STRING',
+            'enum': ['task', 'default'],
+            'description':
+                '"task" for one-time entries, "default" for recurring habits.',
+          },
+          'id': {
+            'type': 'STRING',
+            'description': 'Required ONLY for "update" action.',
+          },
           'name': {'type': 'STRING'},
-          'date': {'type': 'STRING', 'description': 'YYYY-MM-DD'},
-          'startTime': {'type': 'STRING', 'description': 'HH:mm'},
-          'endTime': {'type': 'STRING', 'description': 'HH:mm'},
+          'date': {
+            'type': 'STRING',
+            'description': 'YYYY-MM-DD (Required for type="task").',
+          },
+          'startTime': {
+            'type': 'STRING',
+            'description': 'HH:mm (Required for create).',
+          },
+          'endTime': {'type': 'STRING', 'description': 'HH:mm.'},
+          'weekdays': {
+            'type': 'ARRAY',
+            'items': {'type': 'INTEGER'},
+            'description':
+                '1=Mon, 7=Sun (Required for create where type="default").',
+          },
           'importance': {
             'type': 'STRING',
             'enum': ['Low', 'Medium', 'High'],
           },
           'note': {'type': 'STRING'},
-        },
-        'required': ['name', 'date', 'startTime', 'endTime'],
-      },
-    },
-    {
-      'name': 'updateTask',
-      'description': 'Update an existing task status or details.',
-      'parameters': {
-        'type': 'OBJECT',
-        'properties': {
-          'id': {'type': 'STRING'},
-          'name': {'type': 'STRING'},
-          'isDone': {'type': 'BOOLEAN'},
-          'date': {'type': 'STRING', 'description': 'YYYY-MM-DD'},
-        },
-        'required': ['id'],
-      },
-    },
-    {
-      'name': 'deleteTask',
-      'description': 'Delete a task by its ID.',
-      'parameters': {
-        'type': 'OBJECT',
-        'properties': {
-          'id': {'type': 'STRING'},
-        },
-        'required': ['id'],
-      },
-    },
-    {
-      'name': 'addDefaultTask',
-      'description': 'Create a new recurring (default) task/habit.',
-      'parameters': {
-        'type': 'OBJECT',
-        'properties': {
-          'name': {'type': 'STRING'},
-          'weekdays': {
-            'type': 'ARRAY',
-            'items': {'type': 'INTEGER'},
-            'description': '1=Monday, 7=Sunday',
-          },
-          'startTime': {'type': 'STRING', 'description': 'HH:mm'},
-          'endTime': {'type': 'STRING', 'description': 'HH:mm'},
-          'importance': {
+          'category': {
             'type': 'STRING',
-            'enum': ['Low', 'Medium', 'High'],
+            'enum': ['Work', 'Meeting', 'Personal', 'Health', 'Other'],
           },
-          'note': {'type': 'STRING'},
-        },
-        'required': ['name', 'weekdays', 'startTime', 'endTime'],
-      },
-    },
-    {
-      'name': 'updateDefaultTask',
-      'description': 'Update a recurring (default) task template.',
-      'parameters': {
-        'type': 'OBJECT',
-        'properties': {
-          'id': {'type': 'STRING'},
-          'name': {'type': 'STRING'},
-          'weekdays': {
-            'type': 'ARRAY',
-            'items': {'type': 'INTEGER'},
+          'isDone': {'type': 'BOOLEAN', 'description': 'Only for type="task".'},
+          'isDeleted': {
+            'type': 'BOOLEAN',
+            'description': 'Set to true to delete the task or habit.',
           },
-          'startTime': {'type': 'STRING', 'description': 'HH:mm'},
-          'endTime': {'type': 'STRING', 'description': 'HH:mm'},
         },
-        'required': ['id'],
-      },
-    },
-    {
-      'name': 'deleteDefaultTask',
-      'description': 'Delete a recurring (default) task template.',
-      'parameters': {
-        'type': 'OBJECT',
-        'properties': {
-          'id': {'type': 'STRING'},
-        },
-        'required': ['id'],
+        'required': ['action', 'type'],
       },
     },
   ];

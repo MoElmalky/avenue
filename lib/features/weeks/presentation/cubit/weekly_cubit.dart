@@ -118,7 +118,14 @@ class WeeklyCubit extends Cubit<WeeklyState> {
                   date,
                 );
 
-                // Check if already crystallized
+                // Filter out default tasks that are hidden for this specific date
+                final dateStr = date.toIso8601String().split('T')[0];
+                if (dt.hideOn.any(
+                  (d) => d.toIso8601String().split('T')[0] == dateStr,
+                )) {
+                  continue;
+                }
+
                 if (tasks.any((t) => t.id == predictableId)) continue;
 
                 allTasks.add(
@@ -133,6 +140,7 @@ class WeeklyCubit extends Cubit<WeeklyState> {
                     completed: false,
                     oneTime: false,
                     importanceType: dt.importanceType,
+                    defaultTaskId: dt.id,
                   ),
                 );
               }

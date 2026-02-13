@@ -5,66 +5,48 @@ part 'ai_action_models.g.dart';
 
 @Freezed(unionKey: 'type')
 sealed class AiAction with _$AiAction {
-  @FreezedUnionValue('createTask')
-  const factory AiAction.createTask({
-    required String name,
-    required DateTime date,
-    String? startTime,
-    String? endTime,
-    @Default('Medium') String importance,
-    String? note,
-  }) = CreateTaskAction;
-
-  @FreezedUnionValue('updateTask')
-  const factory AiAction.updateTask({
-    required String id,
+  // Matches manageSchedule(type: "task")
+  @FreezedUnionValue('task')
+  const factory AiAction.task({
+    required String action, // "create" | "update"
+    String? id,
     String? name,
     DateTime? date,
     String? startTime,
     String? endTime,
     String? importance,
     String? note,
+    String? category,
     bool? isDone,
-  }) = UpdateTaskAction;
+    bool? isDeleted,
+    String? defaultTaskId, // Optional: Link to a habit
+  }) = TaskAction;
 
-  @FreezedUnionValue('deleteTask')
-  const factory AiAction.deleteTask({required String id}) = DeleteTaskAction;
-
-  @FreezedUnionValue('updateSettings')
-  const factory AiAction.updateSettings({
-    String? theme,
-    String? language,
-    bool? notificationsEnabled,
-  }) = UpdateSettingsAction;
-
-  @FreezedUnionValue('createDefaultTask')
-  const factory AiAction.createDefaultTask({
-    required String name,
-    required List<int> weekdays, // 1 = Monday, 7 = Sunday
-    required String startTime,
-    required String endTime,
-    @Default('Medium') String importance,
-    String? note,
-  }) = CreateDefaultTaskAction;
-
-  @FreezedUnionValue('updateDefaultTask')
-  const factory AiAction.updateDefaultTask({
-    required String id,
+  // Matches manageSchedule(type: "default")
+  @FreezedUnionValue('default')
+  const factory AiAction.habit({
+    required String action, // "create" | "update"
+    String? id, // The habit UUID
     String? name,
     List<int>? weekdays,
     String? startTime,
     String? endTime,
     String? importance,
     String? note,
-  }) = UpdateDefaultTaskAction;
+    String? category,
+    bool? isDeleted,
+  }) = HabitAction;
 
-  @FreezedUnionValue('deleteDefaultTask')
-  const factory AiAction.deleteDefaultTask({required String id}) =
-      DeleteDefaultTaskAction;
+  @FreezedUnionValue('settings')
+  const factory AiAction.updateSettings({
+    String? theme,
+    String? language,
+    bool? notificationsEnabled,
+  }) = UpdateSettingsAction;
 
   @FreezedUnionValue('skipHabitInstance')
   const factory AiAction.skipHabitInstance({
-    required String id,
+    required String id, // The habit UUID (default_task_id)
     required DateTime date,
   }) = SkipHabitInstanceAction;
 

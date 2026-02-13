@@ -6,45 +6,25 @@ part of 'ai_action_models.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-CreateTaskAction _$CreateTaskActionFromJson(Map<String, dynamic> json) =>
-    CreateTaskAction(
-      name: json['name'] as String,
-      date: DateTime.parse(json['date'] as String),
-      startTime: json['startTime'] as String?,
-      endTime: json['endTime'] as String?,
-      importance: json['importance'] as String? ?? 'Medium',
-      note: json['note'] as String?,
-      $type: json['type'] as String?,
-    );
+TaskAction _$TaskActionFromJson(Map<String, dynamic> json) => TaskAction(
+  action: json['action'] as String,
+  id: json['id'] as String?,
+  name: json['name'] as String?,
+  date: json['date'] == null ? null : DateTime.parse(json['date'] as String),
+  startTime: json['startTime'] as String?,
+  endTime: json['endTime'] as String?,
+  importance: json['importance'] as String?,
+  note: json['note'] as String?,
+  category: json['category'] as String?,
+  isDone: json['isDone'] as bool?,
+  isDeleted: json['isDeleted'] as bool?,
+  defaultTaskId: json['defaultTaskId'] as String?,
+  $type: json['type'] as String?,
+);
 
-Map<String, dynamic> _$CreateTaskActionToJson(CreateTaskAction instance) =>
+Map<String, dynamic> _$TaskActionToJson(TaskAction instance) =>
     <String, dynamic>{
-      'name': instance.name,
-      'date': instance.date.toIso8601String(),
-      'startTime': instance.startTime,
-      'endTime': instance.endTime,
-      'importance': instance.importance,
-      'note': instance.note,
-      'type': instance.$type,
-    };
-
-UpdateTaskAction _$UpdateTaskActionFromJson(Map<String, dynamic> json) =>
-    UpdateTaskAction(
-      id: json['id'] as String,
-      name: json['name'] as String?,
-      date: json['date'] == null
-          ? null
-          : DateTime.parse(json['date'] as String),
-      startTime: json['startTime'] as String?,
-      endTime: json['endTime'] as String?,
-      importance: json['importance'] as String?,
-      note: json['note'] as String?,
-      isDone: json['isDone'] as bool?,
-      $type: json['type'] as String?,
-    );
-
-Map<String, dynamic> _$UpdateTaskActionToJson(UpdateTaskAction instance) =>
-    <String, dynamic>{
+      'action': instance.action,
       'id': instance.id,
       'name': instance.name,
       'date': instance.date?.toIso8601String(),
@@ -52,15 +32,43 @@ Map<String, dynamic> _$UpdateTaskActionToJson(UpdateTaskAction instance) =>
       'endTime': instance.endTime,
       'importance': instance.importance,
       'note': instance.note,
+      'category': instance.category,
       'isDone': instance.isDone,
+      'isDeleted': instance.isDeleted,
+      'defaultTaskId': instance.defaultTaskId,
       'type': instance.$type,
     };
 
-DeleteTaskAction _$DeleteTaskActionFromJson(Map<String, dynamic> json) =>
-    DeleteTaskAction(id: json['id'] as String, $type: json['type'] as String?);
+HabitAction _$HabitActionFromJson(Map<String, dynamic> json) => HabitAction(
+  action: json['action'] as String,
+  id: json['id'] as String?,
+  name: json['name'] as String?,
+  weekdays: (json['weekdays'] as List<dynamic>?)
+      ?.map((e) => (e as num).toInt())
+      .toList(),
+  startTime: json['startTime'] as String?,
+  endTime: json['endTime'] as String?,
+  importance: json['importance'] as String?,
+  note: json['note'] as String?,
+  category: json['category'] as String?,
+  isDeleted: json['isDeleted'] as bool?,
+  $type: json['type'] as String?,
+);
 
-Map<String, dynamic> _$DeleteTaskActionToJson(DeleteTaskAction instance) =>
-    <String, dynamic>{'id': instance.id, 'type': instance.$type};
+Map<String, dynamic> _$HabitActionToJson(HabitAction instance) =>
+    <String, dynamic>{
+      'action': instance.action,
+      'id': instance.id,
+      'name': instance.name,
+      'weekdays': instance.weekdays,
+      'startTime': instance.startTime,
+      'endTime': instance.endTime,
+      'importance': instance.importance,
+      'note': instance.note,
+      'category': instance.category,
+      'isDeleted': instance.isDeleted,
+      'type': instance.$type,
+    };
 
 UpdateSettingsAction _$UpdateSettingsActionFromJson(
   Map<String, dynamic> json,
@@ -79,71 +87,6 @@ Map<String, dynamic> _$UpdateSettingsActionToJson(
   'notificationsEnabled': instance.notificationsEnabled,
   'type': instance.$type,
 };
-
-CreateDefaultTaskAction _$CreateDefaultTaskActionFromJson(
-  Map<String, dynamic> json,
-) => CreateDefaultTaskAction(
-  name: json['name'] as String,
-  weekdays: (json['weekdays'] as List<dynamic>)
-      .map((e) => (e as num).toInt())
-      .toList(),
-  startTime: json['startTime'] as String,
-  endTime: json['endTime'] as String,
-  importance: json['importance'] as String? ?? 'Medium',
-  note: json['note'] as String?,
-  $type: json['type'] as String?,
-);
-
-Map<String, dynamic> _$CreateDefaultTaskActionToJson(
-  CreateDefaultTaskAction instance,
-) => <String, dynamic>{
-  'name': instance.name,
-  'weekdays': instance.weekdays,
-  'startTime': instance.startTime,
-  'endTime': instance.endTime,
-  'importance': instance.importance,
-  'note': instance.note,
-  'type': instance.$type,
-};
-
-UpdateDefaultTaskAction _$UpdateDefaultTaskActionFromJson(
-  Map<String, dynamic> json,
-) => UpdateDefaultTaskAction(
-  id: json['id'] as String,
-  name: json['name'] as String?,
-  weekdays: (json['weekdays'] as List<dynamic>?)
-      ?.map((e) => (e as num).toInt())
-      .toList(),
-  startTime: json['startTime'] as String?,
-  endTime: json['endTime'] as String?,
-  importance: json['importance'] as String?,
-  note: json['note'] as String?,
-  $type: json['type'] as String?,
-);
-
-Map<String, dynamic> _$UpdateDefaultTaskActionToJson(
-  UpdateDefaultTaskAction instance,
-) => <String, dynamic>{
-  'id': instance.id,
-  'name': instance.name,
-  'weekdays': instance.weekdays,
-  'startTime': instance.startTime,
-  'endTime': instance.endTime,
-  'importance': instance.importance,
-  'note': instance.note,
-  'type': instance.$type,
-};
-
-DeleteDefaultTaskAction _$DeleteDefaultTaskActionFromJson(
-  Map<String, dynamic> json,
-) => DeleteDefaultTaskAction(
-  id: json['id'] as String,
-  $type: json['type'] as String?,
-);
-
-Map<String, dynamic> _$DeleteDefaultTaskActionToJson(
-  DeleteDefaultTaskAction instance,
-) => <String, dynamic>{'id': instance.id, 'type': instance.$type};
 
 SkipHabitInstanceAction _$SkipHabitInstanceActionFromJson(
   Map<String, dynamic> json,

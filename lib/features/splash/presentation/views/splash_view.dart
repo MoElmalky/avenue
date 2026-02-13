@@ -70,7 +70,7 @@ class _SplashViewState extends State<SplashView>
                         borderRadius: BorderRadius.circular(32),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
+                            color: Colors.black.withValues(alpha: 0.2),
                             blurRadius: 20,
                             offset: const Offset(0, 10),
                           ),
@@ -92,15 +92,6 @@ class _SplashViewState extends State<SplashView>
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                         letterSpacing: 8,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Your path to productivity',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.white.withOpacity(0.7),
-                        letterSpacing: 2,
                       ),
                     ),
                   ],

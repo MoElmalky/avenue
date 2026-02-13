@@ -45,22 +45,19 @@ class AiResponseParser {
         try {
           final actionsList = decoded['actions'] as List? ?? [];
           actions = actionsList.map((a) {
+            final map = Map<String, dynamic>.from(a as Map);
             try {
-              final map = Map<String, dynamic>.from(a as Map);
-              // Normalize type to match AiAction union keys
-              // Model now expects 'createTask', 'updateTask', 'deleteTask'
-              if (map['type'] == 'addTask') {
-                map['type'] = 'createTask';
-              } else if (map['type'] == 'addDefaultTask') {
-                map['type'] = 'createDefaultTask';
-              }
               return AiAction.fromJson(map);
             } catch (e) {
               AvenueLogger.log(
                 event: 'AI_PARSE_ERROR',
                 level: LoggerLevel.WARN,
                 layer: LoggerLayer.AI,
-                payload: 'Single action parse error: $e',
+                payload: {
+                  'error': 'Single action parse error: $e',
+                  'action_type': map['type'],
+                  'action_data': map,
+                },
               );
               return const AiAction.unknown(
                 rawResponse: 'Invalid action format',

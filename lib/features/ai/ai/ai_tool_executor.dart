@@ -1,4 +1,3 @@
-import 'package:uuid/uuid.dart';
 import '../../../../core/utils/observability.dart';
 import '../../schdules/data/models/task_model.dart';
 import '../../schdules/domain/repo/schedule_repository.dart';
@@ -24,18 +23,8 @@ class AiToolExecutor {
           return await _handleGetSchedule(args);
         case 'searchSchedule':
           return await _handleSearchSchedule(args);
-        case 'addTask':
-          return await _handleAddTask(args);
-        case 'addDefaultTask':
-          return await _handleAddDefaultTask(args);
-        case 'updateTask':
-          return await _handleUpdateTask(args);
-        case 'updateDefaultTask':
-          return await _handleUpdateDefaultTask(args);
-        case 'deleteTask':
-          return await _handleDeleteTask(args);
-        case 'deleteDefaultTask':
-          return await _handleDeleteDefaultTask(args);
+        case 'manageSchedule':
+          return await _handleManageSchedule(args);
         default:
           return {'error': 'Tool not found: $name'};
       }
@@ -233,87 +222,28 @@ class AiToolExecutor {
     return {'tasks': allResults};
   }
 
-  Future<Map<String, dynamic>> _handleAddTask(Map<String, dynamic> args) async {
-    // [Draft Mode] Generate ID but do not save to DB yet.
-    // The UI will confirm and execute.
-    final id = const Uuid().v4();
+  Future<Map<String, dynamic>> _handleManageSchedule(
+    Map<String, dynamic> args,
+  ) async {
+    final action = args['action'] as String;
+    final type = args['type'] as String;
+    final id = args['id'] as String?;
+
     AvenueLogger.log(
       event: 'AI_DRAFT_ACTION',
       layer: LoggerLayer.AI,
-      payload: {'action': 'addTask', 'id': id},
+      payload: {
+        'action': 'manageSchedule',
+        'subAction': action,
+        'type': type,
+        'id': id,
+      },
     );
-    return {
-      'success': true,
-      'taskId': id,
-      'status': 'success_draft_waiting_confirmation',
-      'message': 'Draft created. Ask user to confirm.',
-    };
-  }
 
-  Future<Map<String, dynamic>> _handleAddDefaultTask(
-    Map<String, dynamic> args,
-  ) async {
-    // [Draft Mode]
-    final id = const Uuid().v4();
-    AvenueLogger.log(
-      event: 'AI_DRAFT_ACTION',
-      layer: LoggerLayer.AI,
-      payload: {'action': 'addDefaultTask', 'id': id},
-    );
-    return {
-      'success': true,
-      'defaultTaskId': id,
-      'status': 'success_draft_waiting_confirmation',
-      'message': 'Draft created. Ask user to confirm.',
-    };
-  }
-
-  Future<Map<String, dynamic>> _handleUpdateTask(
-    Map<String, dynamic> args,
-  ) async {
-    // [Draft Mode] We still check if it exists to be nice, but act as if updated
-    // Optional: Check existence?
-    // final existingResult = await _repository.getTaskById(id);
-    // if (existingResult.isLeft()) return {'error': 'Task not found'};
-
-    // Validate we can parse the inputs at least?
-    // For now, assume success to let user confirm.
     return {
       'success': true,
       'status': 'success_draft_waiting_confirmation',
-      'message': 'Update draft ready. Ask user to confirm.',
-    };
-  }
-
-  Future<Map<String, dynamic>> _handleUpdateDefaultTask(
-    Map<String, dynamic> args,
-  ) async {
-    return {
-      'success': true,
-      'status': 'success_draft_waiting_confirmation',
-      'message': 'Update draft ready. Ask user to confirm.',
-    };
-  }
-
-  Future<Map<String, dynamic>> _handleDeleteTask(
-    Map<String, dynamic> args,
-  ) async {
-    // [Draft Mode]
-    return {
-      'success': true,
-      'status': 'success_draft_waiting_confirmation',
-      'message': 'Delete draft ready. Ask user to confirm.',
-    };
-  }
-
-  Future<Map<String, dynamic>> _handleDeleteDefaultTask(
-    Map<String, dynamic> args,
-  ) async {
-    // [Draft Mode]
-    return {
-      'success': true,
-      'status': 'success_draft_waiting_confirmation',
-      'message': 'Delete draft ready. Ask user to confirm.',
+      'message': 'Action draft ready. Ask user to confirm.',
     };
   }
 }

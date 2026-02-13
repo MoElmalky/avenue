@@ -69,16 +69,8 @@ class _HomeViewState extends State<HomeView> {
               state.selectedDate != null &&
               CalendarUtils.normalize(state.selectedDate!) == _date;
 
-          // Show loader if:
-          // 1. State is explicitly TaskLoading
-          // 2. We are in TaskInitial (just started)
-          // 3. The state belongs to a different date and it's NOT an error/loaded state we can use
-          bool shouldShowLoader = state is TaskLoading || state is TaskInitial;
-          if (!isSameDate && state is! TaskError && state is! TaskLoaded) {
-            shouldShowLoader = true;
-          }
-
-          if (shouldShowLoader) {
+          // loader if we are loading OR if the state belongs to a different date
+          if (state is TaskLoading || !isSameDate) {
             return const Center(child: AvenueLoadingIndicator());
           } else if (state is TaskLoaded) {
             final tasks = state.tasks;
