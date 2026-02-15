@@ -15,11 +15,12 @@ class ChatLoading extends ChatState {}
 class ChatLoaded extends ChatState {
   final List<ChatMessage> messages;
   final DateTime? updatedAt;
+  final bool isTyping;
 
-  const ChatLoaded(this.messages, {this.updatedAt});
+  const ChatLoaded(this.messages, {this.updatedAt, this.isTyping = false});
 
   @override
-  List<Object?> get props => [messages, updatedAt];
+  List<Object?> get props => [messages, updatedAt, isTyping];
 }
 
 class ChatError extends ChatState {

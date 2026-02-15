@@ -66,23 +66,18 @@ class _ChatScreenState extends State<_ChatScreen> {
         BlocListener<ChatSessionCubit, ChatSessionState>(
           listener: (context, sessionState) {
             if (sessionState is ChatSessionLoaded) {
-              // If the chatId changed, we are transitioning to a different chat
               if (sessionState.currentChatId != _lastChatId) {
                 final oldId = _lastChatId;
                 _lastChatId = sessionState.currentChatId;
-                _notifiedMessageIndexes.clear(); // Reset on switch
-
-                // CRITICAL FIX: Only load messages if we are explicitly switching.
+                _notifiedMessageIndexes.clear();
                 if (oldId != null &&
                     oldId.isEmpty &&
                     sessionState.currentChatId.isNotEmpty &&
                     !_isSwitching) {
                   return;
                 }
-
-                // Normal switching (e.g. from Drawer) or loading first chat
                 context.read<ChatCubit>().loadMessages(sessionState.messages);
-                _isSwitching = false; // Reset flag
+                _isSwitching = false;
               }
             }
           },
@@ -98,14 +93,15 @@ class _ChatScreenState extends State<_ChatScreen> {
                     !_notifiedMessageIndexes.contains(i)) {
                   _notifiedMessageIndexes.add(i);
 
-                  // Extract date for better feedback if available
-                  String dateStr = "بنجاح";
+                  String dateStr = "successfully";
                   if (m.suggestedActions != null &&
                       m.suggestedActions!.isNotEmpty) {
                     final firstAction = m.suggestedActions!.first;
-                    if (firstAction is CreateTaskAction) {
+                    if (firstAction is TaskAction) {
                       final d = firstAction.date;
-                      dateStr = "ليوم ${d.day}/${d.month}";
+                      if (d != null) {
+                        dateStr = "for ${d.day}/${d.month}";
+                      }
                     }
                   }
 
@@ -116,7 +112,7 @@ class _ChatScreenState extends State<_ChatScreen> {
                         children: [
                           const Icon(Icons.check_circle, color: Colors.white),
                           const SizedBox(width: 8),
-                          Text('تم التنفيذ $dateStr!'),
+                          Text('Executed $dateStr!'),
                         ],
                       ),
                       backgroundColor: Colors.green,
@@ -157,58 +153,129 @@ class _ChatScreenState extends State<_ChatScreen> {
             _isSwitching = true;
           },
         ),
-        body: Column(
-          children: [
-            Expanded(
-              child: BlocBuilder<ChatCubit, ChatState>(
-                builder: (context, state) {
-                  List<ChatMessage> messages = [];
-                  if (state is ChatLoaded) messages = state.messages;
+        body: BlocBuilder<ChatSessionCubit, ChatSessionState>(
+          builder: (context, sessionState) {
+            if (sessionState is ChatSessionLoading) {
+              return Center(
+                child: CircularProgressIndicator(
+                  color: isDark ? Colors.white : theme.primaryColor,
+                  strokeWidth: 2,
+                ),
+              );
+            }
 
-                  if (messages.isEmpty && state is! ChatError) {
-                    return _buildEmptyState(theme, isDark);
-                  }
+            return Column(
+              children: [
+                Expanded(
+                  child: BlocBuilder<ChatCubit, ChatState>(
+                    builder: (context, state) {
+                      List<ChatMessage> messages = [];
+                      if (state is ChatLoaded) messages = state.messages;
 
-                  return ListView.builder(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 24,
-                    ),
-                    reverse: false,
-                    itemCount: messages.length,
-                    itemBuilder: (context, index) {
-                      final msg = messages[index];
-                      return TweenAnimationBuilder<double>(
-                        key: ValueKey(
-                          msg.text +
-                              index.toString() +
-                              msg.isExecuted.toString(),
+                      if (messages.isEmpty && state is! ChatError) {
+                        return _buildEmptyState(theme, isDark);
+                      }
+
+                      return ListView.builder(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 24,
                         ),
-                        tween: Tween(begin: 0.0, end: 1.0),
-                        duration: const Duration(milliseconds: 400),
-                        curve: Curves.easeOutCubic,
-                        builder: (context, value, child) {
-                          return Transform.translate(
-                            offset: Offset(0, 20 * (1 - value)),
-                            child: Opacity(
-                              opacity: value,
-                              child: _buildMessageBubble(
-                                context,
-                                msg,
-                                index,
-                                theme,
-                                isDark,
-                              ),
-                            ),
-                          );
+                        reverse: true,
+                        itemCount:
+                            messages.length +
+                            (state is ChatLoaded && state.isTyping ? 1 : 0),
+                        itemBuilder: (context, index) {
+                          final isTyping =
+                              state is ChatLoaded && state.isTyping;
+                          if (isTyping) {
+                            if (index == 0)
+                              return _buildTypingIndicator(theme, isDark);
+                            final msgIndex = messages.length - 1 - (index - 1);
+                            return _buildAnimatedMessage(
+                              context,
+                              messages[msgIndex],
+                              msgIndex,
+                              theme,
+                              isDark,
+                            );
+                          } else {
+                            final msgIndex = messages.length - 1 - index;
+                            return _buildAnimatedMessage(
+                              context,
+                              messages[msgIndex],
+                              msgIndex,
+                              theme,
+                              isDark,
+                            );
+                          }
                         },
                       );
                     },
-                  );
-                },
-              ),
+                  ),
+                ),
+                const _ChatInput(),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAnimatedMessage(
+    BuildContext context,
+    ChatMessage msg,
+    int index,
+    ThemeData theme,
+    bool isDark,
+  ) {
+    return TweenAnimationBuilder<double>(
+      key: ValueKey(msg.text + index.toString() + msg.isExecuted.toString()),
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, child) {
+        return Transform.translate(
+          offset: Offset(0, 20 * (1 - value)),
+          child: Opacity(
+            opacity: value,
+            child: _buildMessageBubble(context, msg, index, theme, isDark),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildTypingIndicator(ThemeData theme, bool isDark) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: theme.cardColor,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(20),
+            bottomLeft: Radius.circular(4),
+            bottomRight: Radius.circular(20),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
-            const _ChatInput(),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _ShimmerText(text: 'Avenue is thinking...', isDark: isDark),
+            const SizedBox(height: 8),
+            const _AnimatedThreeDots(),
           ],
         ),
       ),
@@ -224,8 +291,8 @@ class _ChatScreenState extends State<_ChatScreen> {
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: isDark
-                  ? Colors.white.withOpacity(0.1)
-                  : AppColors.deepPurple.withOpacity(0.1),
+                  ? Colors.white.withValues(alpha: 0.1)
+                  : AppColors.deepPurple.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -249,7 +316,7 @@ class _ChatScreenState extends State<_ChatScreen> {
               'Try "Plan my week" or "Add a gym session every Monday at 6pm"',
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: AppColors.slatePurple.withOpacity(0.6),
+                color: isDark ? Colors.white70 : AppColors.deepPurple,
               ),
             ),
           ),
@@ -281,7 +348,7 @@ class _ChatScreenState extends State<_ChatScreen> {
           boxShadow: [
             if (!msg.isUser)
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withValues(alpha: 0.05),
                 blurRadius: 5,
                 offset: const Offset(0, 2),
               ),
@@ -348,9 +415,11 @@ class _ChatScreenState extends State<_ChatScreen> {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.green.withOpacity(0.1),
+                      color: Colors.green.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.green.withOpacity(0.3)),
+                      border: Border.all(
+                        color: Colors.green.withValues(alpha: 0.3),
+                      ),
                     ),
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,
@@ -362,7 +431,7 @@ class _ChatScreenState extends State<_ChatScreen> {
                         ),
                         SizedBox(width: 6),
                         Text(
-                          'تم التنفيذ بنجاح',
+                          'Executed successfully',
                           style: TextStyle(
                             color: Colors.green,
                             fontSize: 12,
@@ -382,7 +451,138 @@ class _ChatScreenState extends State<_ChatScreen> {
   }
 }
 
-// TODO: This drawer will be connected to Supabase chat tables later
+class _ShimmerText extends StatefulWidget {
+  final String text;
+  final bool isDark;
+
+  const _ShimmerText({required this.text, required this.isDark});
+
+  @override
+  State<_ShimmerText> createState() => _ShimmerTextState();
+}
+
+class _ShimmerTextState extends State<_ShimmerText>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2000),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final baseColor = widget.isDark
+        ? Colors.white.withValues(alpha: 0.4)
+        : AppColors.deepPurple.withValues(alpha: 0.4);
+    final highlightColor = widget.isDark ? Colors.white : AppColors.deepPurple;
+
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return ShaderMask(
+          shaderCallback: (bounds) {
+            return LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [baseColor, highlightColor, baseColor],
+              stops: [
+                (_controller.value * 2.0) - 1.0,
+                (_controller.value * 2.0) - 0.5,
+                _controller.value * 2.0,
+              ],
+            ).createShader(bounds);
+          },
+          child: Text(
+            widget.text,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.3,
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _AnimatedThreeDots extends StatefulWidget {
+  const _AnimatedThreeDots();
+
+  @override
+  State<_AnimatedThreeDots> createState() => _AnimatedThreeDotsState();
+}
+
+class _AnimatedThreeDotsState extends State<_AnimatedThreeDots>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(3, (index) {
+        return AnimatedBuilder(
+          animation: _controller,
+          builder: (context, child) {
+            final double delayedValue =
+                (_controller.value - (index * 0.15)) % 1.0;
+            final double opacity = Curves.easeInOut
+                .transform(
+                  delayedValue < 0.5
+                      ? delayedValue * 2
+                      : (1 - delayedValue) * 2,
+                )
+                .clamp(0.2, 1.0);
+
+            final double scale = 0.8 + (0.3 * opacity);
+
+            return Container(
+              margin: const EdgeInsets.only(right: 6),
+              width: 5,
+              height: 5,
+              transform: Matrix4.identity()..scale(scale),
+              decoration: BoxDecoration(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.white.withValues(alpha: opacity)
+                    : AppColors.deepPurple.withValues(alpha: opacity),
+                shape: BoxShape.circle,
+              ),
+            );
+          },
+        );
+      }),
+    );
+  }
+}
+
 class _ChatDrawer extends StatelessWidget {
   final VoidCallback onSwitch;
   const _ChatDrawer({required this.onSwitch});
@@ -425,7 +625,7 @@ class _ChatDrawer extends StatelessWidget {
                     Text(
                       'Your personal task manager',
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.8),
+                        color: Colors.white.withValues(alpha: 0.8),
                         fontSize: 14,
                       ),
                     ),
@@ -631,7 +831,7 @@ class _ChatInputState extends State<_ChatInput> {
       decoration: BoxDecoration(
         color: theme.scaffoldBackgroundColor,
         border: Border(
-          top: BorderSide(color: theme.dividerColor.withOpacity(0.1)),
+          top: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
         ),
       ),
       child: Row(
