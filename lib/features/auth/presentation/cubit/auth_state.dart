@@ -9,12 +9,14 @@ abstract class AuthState extends Equatable {
 
 class AuthInitial extends AuthState {}
 
+enum AuthLoadingSource { email, google, facebook, other }
+
 class AuthLoading extends AuthState {
-  final bool isGoogle;
-  const AuthLoading({this.isGoogle = false});
+  final AuthLoadingSource source;
+  const AuthLoading({this.source = AuthLoadingSource.email});
 
   @override
-  List<Object?> get props => [isGoogle];
+  List<Object?> get props => [source];
 }
 
 class Authenticated extends AuthState {

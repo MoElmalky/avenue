@@ -151,7 +151,8 @@ class _LoginViewState extends State<LoginView> {
                           builder: (context, state) {
                             return ElevatedButton(
                               onPressed:
-                                  (state is AuthLoading && !state.isGoogle)
+                                  (state is AuthLoading &&
+                                      state.source == AuthLoadingSource.email)
                                   ? null
                                   : () {
                                       if (_formKey.currentState!.validate()) {
@@ -173,7 +174,9 @@ class _LoginViewState extends State<LoginView> {
                                 ),
                                 elevation: 0,
                               ),
-                              child: (state is AuthLoading && !state.isGoogle)
+                              child:
+                                  (state is AuthLoading &&
+                                      state.source == AuthLoadingSource.email)
                                   ? const SizedBox(
                                       height: 24,
                                       width: 24,

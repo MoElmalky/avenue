@@ -184,6 +184,19 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<Either<Failure, bool>> signInWithFacebook() async {
+    try {
+      final res = await supabase.auth.signInWithOAuth(
+        OAuthProvider.facebook,
+        redirectTo: 'com.example.line://login-callback',
+      );
+      return Right(res);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
   Stream<AuthEvent> get authEvents {
     return supabase.auth.onAuthStateChange.map((data) {
       switch (data.event) {

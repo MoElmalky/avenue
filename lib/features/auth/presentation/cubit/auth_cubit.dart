@@ -161,7 +161,7 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   Future<void> signInWithGoogle() async {
-    emit(const AuthLoading(isGoogle: true));
+    emit(const AuthLoading(source: AuthLoadingSource.google));
     final result = await repository.signInWithGoogle();
     result.fold((failure) => emit(AuthError(failure.message)), (_) {
       // Success means the browser flow started.
@@ -169,8 +169,17 @@ class AuthCubit extends Cubit<AuthState> {
     });
   }
 
+  Future<void> signInWithFacebook() async {
+    emit(const AuthLoading(source: AuthLoadingSource.facebook));
+    final result = await repository.signInWithFacebook();
+    result.fold((failure) => emit(AuthError(failure.message)), (_) {
+      // Success means the browser flow started.
+      // We rely on _authSubscription.
+    });
+  }
+
   Future<void> signOut() async {
-    emit(AuthLoading());
+    emit(const AuthLoading(source: AuthLoadingSource.other));
     final result = await repository.signOut();
     result.fold((failure) => emit(AuthError(failure.message)), (_) async {
       await databaseService.clearUserData();

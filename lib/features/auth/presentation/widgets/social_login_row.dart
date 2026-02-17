@@ -33,17 +33,24 @@ class SocialLoginRow extends StatelessWidget {
                       context.read<AuthCubit>().signInWithGoogle();
                     },
               assetPath: "assets/icon/google.svg",
-              isLoading: state is AuthLoading && state.isGoogle,
+              isLoading:
+                  state is AuthLoading &&
+                  state.source == AuthLoadingSource.google,
             ),
 
             const SizedBox(width: 20),
 
-            // Facebook (Placeholder)
+            // Facebook (Functional)
             _buildSocialButton(
-              onTap: () {
-                // Future Implementation
-              },
+              onTap: isLoading
+                  ? null
+                  : () {
+                      context.read<AuthCubit>().signInWithFacebook();
+                    },
               assetPath: "assets/icon/facebook.svg",
+              isLoading:
+                  state is AuthLoading &&
+                  state.source == AuthLoadingSource.facebook,
             ),
           ],
         );

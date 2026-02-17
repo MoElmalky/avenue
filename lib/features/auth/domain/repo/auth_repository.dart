@@ -24,6 +24,7 @@ abstract class AuthRepository {
 
   // Google Sign In & Reactive Auth
   Future<Either<Failure, bool>> signInWithGoogle();
+  Future<Either<Failure, bool>> signInWithFacebook();
   Stream<AuthEvent> get authEvents;
 }
 
