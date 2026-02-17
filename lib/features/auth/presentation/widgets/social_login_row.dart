@@ -15,16 +15,6 @@ class SocialLoginRow extends StatelessWidget {
         return Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Apple (Placeholder)
-            _buildSocialButton(
-              onTap: () {
-                // Future Implementation
-              },
-              assetPath: "assets/icon/apple.svg",
-            ),
-
-            const SizedBox(width: 20),
-
             // Google (Functional)
             _buildSocialButton(
               onTap: isLoading

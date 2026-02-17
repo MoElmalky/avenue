@@ -24,14 +24,28 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   void _initAuthListener() {
-    _authSubscription = repository.authEvents.listen((event) {
-      if (_isClosed) return;
-      if (event == AuthEvent.signedIn) {
-        _handleAuthSuccess();
-      } else if (event == AuthEvent.signedOut) {
-        emit(Unauthenticated());
-      }
-    });
+    _authSubscription = repository.authEvents.listen(
+      (event) {
+        if (_isClosed) return;
+        if (event == AuthEvent.signedIn) {
+          _handleAuthSuccess();
+        } else if (event == AuthEvent.signedOut) {
+          emit(Unauthenticated());
+        }
+      },
+      onError: (error) {
+        if (_isClosed) return;
+        AvenueLogger.log(
+          event: 'AUTH_STREAM_ERROR',
+          level: LoggerLevel.WARN,
+          layer: LoggerLayer.STATE,
+          payload: error.toString(),
+        );
+        if (!repository.isAuthenticated) {
+          emit(Unauthenticated());
+        }
+      },
+    );
   }
 
   void _checkAuthStatus() {
@@ -166,6 +180,12 @@ class AuthCubit extends Cubit<AuthState> {
     result.fold((failure) => emit(AuthError(failure.message)), (_) {
       // Success means the browser flow started.
       // We rely on _authSubscription.
+      // Fallback: If no auth event received in 5s, reset to Unauthenticated
+      Future.delayed(const Duration(seconds: 5), () {
+        if (state is AuthLoading && !repository.isAuthenticated) {
+          emit(Unauthenticated());
+        }
+      });
     });
   }
 
@@ -175,6 +195,12 @@ class AuthCubit extends Cubit<AuthState> {
     result.fold((failure) => emit(AuthError(failure.message)), (_) {
       // Success means the browser flow started.
       // We rely on _authSubscription.
+      // Fallback: If no auth event received in 5s, reset to Unauthenticated
+      Future.delayed(const Duration(seconds: 5), () {
+        if (state is AuthLoading && !repository.isAuthenticated) {
+          emit(Unauthenticated());
+        }
+      });
     });
   }
 
