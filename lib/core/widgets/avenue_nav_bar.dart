@@ -30,7 +30,7 @@ class AvenueNavBar extends StatelessWidget {
         borderRadius: BorderRadius.circular(36),
         boxShadow: [
           BoxShadow(
-            color: AppColors.deepPurple.withOpacity(0.3),
+            color: AppColors.deepPurple.withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -45,8 +45,8 @@ class AvenueNavBar extends StatelessWidget {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  AppColors.deepPurple.withOpacity(0.8),
-                  AppColors.deepPurple.withOpacity(0.65),
+                  AppColors.deepPurple.withValues(alpha: 0.8),
+                  AppColors.deepPurple.withValues(alpha: 0.65),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -69,9 +69,9 @@ class AvenueNavBar extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? Colors.white.withOpacity(0.15)
+                          ? Colors.white.withValues(alpha: 0.2)
                           : Colors.transparent,
-                      borderRadius: BorderRadius.circular(24),
+                      borderRadius: BorderRadius.circular(32),
                     ),
                     child: AnimatedScale(
                       duration: const Duration(milliseconds: 400),
@@ -84,7 +84,7 @@ class AvenueNavBar extends StatelessWidget {
                             items[index].icon,
                             color: isSelected
                                 ? Colors.white
-                                : Colors.white.withOpacity(0.7),
+                                : Colors.white.withValues(alpha: 0.7),
                             size: 24,
                           ),
                           AnimatedSize(

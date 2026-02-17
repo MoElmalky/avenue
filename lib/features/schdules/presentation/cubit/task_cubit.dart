@@ -334,16 +334,28 @@ class TaskCubit extends Cubit<TaskState> {
   Future<void> updateTask(TaskModel task, {String? traceId}) async {
     final result = await repository.updateTask(task, traceId: traceId);
 
-    result.fold(
-      (failure) => _logState(
-        TaskError(
-          failure.message,
-          selectedDate: _selectedDate,
-          firstTaskDate: state.firstTaskDate,
-          lastTaskDate: state.lastTaskDate,
-        ),
-        traceId: traceId,
-      ),
+    await result.fold(
+      (failure) async {
+        // If failed because not found, create it as a new task (Crystallization)
+        if (failure.message.toLowerCase().contains('not found')) {
+          AvenueLogger.log(
+            event: 'STATE_CRYSTALLIZE_TASK_ON_UPDATE',
+            layer: LoggerLayer.STATE,
+            payload: task.name,
+          );
+          await addTask(task);
+        } else {
+          _logState(
+            TaskError(
+              failure.message,
+              selectedDate: _selectedDate,
+              firstTaskDate: state.firstTaskDate,
+              lastTaskDate: state.lastTaskDate,
+            ),
+            traceId: traceId,
+          );
+        }
+      },
       (_) {
         if (state is FutureTasksLoaded) {
           loadFutureTasks();
