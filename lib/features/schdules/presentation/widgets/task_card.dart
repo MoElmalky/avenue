@@ -193,7 +193,8 @@ class TaskCard extends StatelessWidget {
                                     flex: 2,
                                     child: _buildTypeIndicator(
                                       context,
-                                      task.oneTime,
+                                      task.oneTime &&
+                                          task.defaultTaskId == null,
                                     ),
                                   ),
                                 ],

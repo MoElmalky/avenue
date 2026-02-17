@@ -641,6 +641,7 @@ class _AddTaskViewState extends State<AddTaskView> {
           completed: widget.task?.completed ?? false,
           importanceType: _selectedImportance,
           oneTime: true,
+          defaultTaskId: widget.task?.defaultTaskId,
         );
         _saveSpecificTask(task);
       }
