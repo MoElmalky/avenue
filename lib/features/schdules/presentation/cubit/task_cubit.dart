@@ -12,15 +12,20 @@ import 'task_state.dart';
 import '../../../../core/services/sync_service.dart';
 import '../../../../core/utils/calendar_utils.dart';
 import '../../../../core/utils/observability.dart';
+import '../../../../core/services/task_notification_manager.dart';
 
 class TaskCubit extends Cubit<TaskState> {
   final ScheduleRepository repository;
   final SyncService syncService;
+  final TaskNotificationManager notificationManager;
   DateTime _selectedDate = DateTime.now();
   StreamSubscription? _connectivitySubscription;
 
-  TaskCubit({required this.repository, required this.syncService})
-    : super(TaskInitial()) {
+  TaskCubit({
+    required this.repository,
+    required this.syncService,
+    required this.notificationManager,
+  }) : super(TaskInitial()) {
     AvenueLogger.log(event: 'STATE_TASK_INITIALIZED', layer: LoggerLayer.STATE);
     _selectedDate = CalendarUtils.normalize(_selectedDate);
     // Removed loadTasks(); Views will trigger it with their specific dates
@@ -321,6 +326,9 @@ class TaskCubit extends Cubit<TaskState> {
         traceId: traceId,
       ),
       (_) {
+        // 2. Schedule notifications for the new task
+        notificationManager.scheduleTaskNotifications(task);
+
         if (state is FutureTasksLoaded) {
           loadFutureTasks();
         } else {
@@ -357,6 +365,9 @@ class TaskCubit extends Cubit<TaskState> {
         }
       },
       (_) {
+        // 2. Re-schedule notifications for the updated task
+        notificationManager.scheduleTaskNotifications(task);
+
         if (state is FutureTasksLoaded) {
           loadFutureTasks();
         } else {
@@ -376,6 +387,9 @@ class TaskCubit extends Cubit<TaskState> {
         traceId: traceId,
       ),
       (_) {
+        // 2. Cancel notifications for the deleted task
+        notificationManager.cancelTaskNotifications(id);
+
         if (state is FutureTasksLoaded) {
           loadFutureTasks();
         } else {
@@ -419,6 +433,11 @@ class TaskCubit extends Cubit<TaskState> {
         }
       },
       (_) {
+        // 2. Reschedule notifications based on the new status
+        // Note: 'task' here is the old state, so we toggle it for scheduling
+        final updatedTask = task.copyWith(completed: !task.completed);
+        notificationManager.scheduleTaskNotifications(updatedTask);
+
         if (state is FutureTasksLoaded) {
           loadFutureTasks();
         } else {
