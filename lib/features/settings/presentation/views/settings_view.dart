@@ -5,6 +5,8 @@ import 'package:avenue/core/utils/constants.dart';
 import 'package:avenue/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:avenue/features/settings/presentation/cubit/settings_cubit.dart';
 import 'package:avenue/features/settings/presentation/cubit/settings_state.dart';
+import '../../../../core/di/injection_container.dart';
+import '../../../../core/services/local_notification_service.dart';
 
 class SettingsView extends StatelessWidget {
   const SettingsView({super.key});
@@ -60,6 +62,22 @@ class SettingsView extends StatelessWidget {
             title: "Notifications",
             subtitle: "On",
             onTap: () {},
+          ),
+          _buildSettingItem(
+            context,
+            icon: Icons.notification_important_outlined,
+            title: "Test Notification",
+            subtitle: "Show an instant test notification",
+            onTap: () async {
+              final service = sl<LocalNotificationService>();
+              await service.requestPermissionIfNeeded();
+              service.showInstantNotification(
+                id: 999,
+                title: 'Test Notification 🚀',
+                body: 'This is a test notification from Avenue app!',
+                payload: 'test_payload',
+              );
+            },
           ),
           const SizedBox(height: 24),
           _buildSectionHeader(context, "Account"),
