@@ -69,6 +69,13 @@ class _AddTaskViewState extends State<AddTaskView> {
     _startTimeController = TextEditingController(text: _formatTime(_startTime));
     _endTimeController = TextEditingController(text: _formatTime(_endTime));
 
+    // Initialize Notification States
+    _notificationsEnabled = task?.notificationsEnabled ?? true;
+    _reminderMinutes = task?.reminderBeforeMinutes;
+    _reminderEnabled = _reminderMinutes != null;
+    _completionNotificationEnabled =
+        task?.completionNotificationEnabled ?? true;
+
     _categoryScrollController.addListener(_updateScrollIndicators);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _updateScrollIndicators();
@@ -102,13 +109,6 @@ class _AddTaskViewState extends State<AddTaskView> {
     _startTimeController.dispose();
     _endTimeController.dispose();
     super.dispose();
-
-    // Initialize Notification States
-    _notificationsEnabled = task?.notificationsEnabled ?? true;
-    _reminderMinutes = task?.reminderBeforeMinutes;
-    _reminderEnabled = _reminderMinutes != null;
-    _completionNotificationEnabled =
-        task?.completionNotificationEnabled ?? true;
   }
 
   final List<String> _importanceLevels = ['Low', 'Medium', 'High'];
@@ -878,13 +878,6 @@ class _AddTaskViewState extends State<AddTaskView> {
 
   Color _getCategoryColor(String category) {
     return AppColors.getCategoryColor(category);
-  }
-
-  String _formatTime(TimeOfDay? time) {
-    if (time == null) return '';
-    final hour = time.hour.toString().padLeft(2, '0');
-    final minute = time.minute.toString().padLeft(2, '0');
-    return '$hour:$minute';
   }
 
   Widget _buildNotificationSection(ThemeData theme) {
