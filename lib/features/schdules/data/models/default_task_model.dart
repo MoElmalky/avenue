@@ -131,7 +131,7 @@ class DefaultTaskModel {
       'importance_type': importanceType,
       'server_updated_at': serverUpdatedAt.toIso8601String(),
       'is_deleted': isDeleted,
-      'embedding': embedding,
+      // 'embedding': embedding, // Removed: Supabase now handles embedding generation
       'hide_on': hideOn.map((d) => d.toIso8601String().split('T')[0]).toList(),
     };
   }

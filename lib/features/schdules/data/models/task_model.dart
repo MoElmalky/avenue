@@ -121,7 +121,7 @@ class TaskModel {
       'is_deleted': isDeleted,
       'server_updated_at': serverUpdatedAt.toIso8601String(),
       'importance_type': importanceType,
-      'embedding': embedding, // Supabase handles vector/array
+      // 'embedding': embedding, // Removed: Supabase now handles embedding generation
       'default_task_id': defaultTaskId,
       'notifications_enabled': notificationsEnabled,
       'reminder_before_minutes': reminderBeforeMinutes,

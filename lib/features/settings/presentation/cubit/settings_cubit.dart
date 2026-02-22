@@ -4,10 +4,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../data/settings_repository.dart';
 import 'settings_state.dart';
 
+import 'package:avenue/features/auth/domain/repo/auth_repository.dart';
+
 class SettingsCubit extends Cubit<SettingsState> {
   final SettingsRepository _repository;
+  final AuthRepository _authRepository;
 
-  SettingsCubit(this._repository) : super(const SettingsState()) {
+  SettingsCubit(this._repository, this._authRepository)
+    : super(const SettingsState()) {
     _loadSettings();
   }
 
@@ -43,5 +47,43 @@ class SettingsCubit extends Cubit<SettingsState> {
     }
     if (isClosed) return;
     emit(state.copyWith(notificationsEnabled: enabled));
+  }
+
+  Future<void> submitFeedback({
+    required String type,
+    required String content,
+  }) async {
+    emit(state.copyWith(feedbackStatus: FeedbackStatus.loading));
+    try {
+      final userId = _authRepository.currentUserId;
+      final email = _authRepository.currentUserEmail;
+
+      await _repository.submitFeedback(
+        type: type,
+        content: content,
+        userId: userId,
+        email: email,
+      );
+
+      if (isClosed) return;
+      emit(state.copyWith(feedbackStatus: FeedbackStatus.success));
+    } catch (e) {
+      if (isClosed) return;
+      emit(
+        state.copyWith(
+          feedbackStatus: FeedbackStatus.failure,
+          feedbackErrorMessage: e.toString(),
+        ),
+      );
+    }
+  }
+
+  void resetFeedbackStatus() {
+    emit(
+      state.copyWith(
+        feedbackStatus: FeedbackStatus.initial,
+        feedbackErrorMessage: null,
+      ),
+    );
   }
 }

@@ -16,6 +16,7 @@ abstract class AuthRepository {
 
   bool get isAuthenticated;
   String? get currentUserId;
+  String? get currentUserEmail;
 
   Future<Either<Failure, void>> createDeviceRecord(String deviceId);
   Future<Either<Failure, void>> createOrUpdateProfile(int timezoneOffset);

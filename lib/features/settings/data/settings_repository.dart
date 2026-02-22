@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SettingsRepository {
   final SharedPreferences _prefs;
+  final SupabaseClient _supabase;
 
-  SettingsRepository(this._prefs);
+  SettingsRepository(this._prefs, this._supabase);
 
   static const String _keyWeekStartDay = 'week_start_day';
   static const String _keyIs24HourFormat = 'is_24_hour_format';
@@ -50,5 +52,20 @@ class SettingsRepository {
 
   Future<void> setThemeMode(ThemeMode mode) async {
     await _prefs.setString(_keyThemeMode, mode.name);
+  }
+
+  Future<void> submitFeedback({
+    required String type,
+    required String content,
+    required String? userId,
+    required String? email,
+  }) async {
+    await _supabase.from('user_feedback').insert({
+      'type': type,
+      'content': content,
+      'user_id': userId,
+      'email': email,
+      'created_at': DateTime.now().toUtc().toIso8601String(),
+    });
   }
 }
