@@ -5,6 +5,7 @@ import 'package:avenue/core/utils/constants.dart';
 import 'package:avenue/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:avenue/features/settings/presentation/cubit/settings_cubit.dart';
 import 'package:avenue/features/settings/presentation/cubit/settings_state.dart';
+import 'package:avenue/features/settings/presentation/views/feedback_view.dart';
 
 class SettingsView extends StatelessWidget {
   const SettingsView({super.key});
@@ -23,6 +24,8 @@ class SettingsView extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         children: [
           _buildBetaBanner(context),
+          const SizedBox(height: 16),
+          _buildFeedbackSection(context),
           const SizedBox(height: 24),
           _buildSectionHeader(context, "General"),
           _buildSettingItem(
@@ -164,6 +167,69 @@ class SettingsView extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildFeedbackSection(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      elevation: 0,
+      color: AppColors.deepPurple.withOpacity(0.05),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: AppColors.deepPurple.withOpacity(0.1)),
+      ),
+      child: InkWell(
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const FeedbackView()),
+        ),
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppColors.deepPurple.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.feedback_outlined,
+                  color: AppColors.deepPurple,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Help us improve Avenue",
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.deepPurple,
+                      ),
+                    ),
+                    Text(
+                      "Submit a bug report or feature request",
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurface.withOpacity(0.6),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(
+                Icons.chevron_right_rounded,
+                color: AppColors.deepPurple,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

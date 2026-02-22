@@ -60,7 +60,7 @@ Future<void> initializeDependencies() async {
     () => SyncService(
       databaseService: sl(),
       supabase: sl(),
-      embeddingService: sl(),
+      // embeddingService: sl(), // Removed: Supabase handles embedding generation
       authRepository: sl(),
       deviceService: sl(),
       notificationManager: sl(),
@@ -86,7 +86,9 @@ Future<void> initializeDependencies() async {
   sl.registerLazySingleton<WeeklyRepository>(
     () => WeeklyRepositoryImpl(localDataSource: sl()),
   );
-  sl.registerLazySingleton<SettingsRepository>(() => SettingsRepository(sl()));
+  sl.registerLazySingleton<SettingsRepository>(
+    () => SettingsRepository(sl(), sl()),
+  );
 
   // Cubits (Factory - new instance each time)
   sl.registerLazySingleton(
@@ -102,7 +104,7 @@ Future<void> initializeDependencies() async {
   );
   sl.registerFactory(() => WeeklyCubit(repository: sl()));
   sl.registerLazySingleton(() => ThemeCubit(sl()));
-  sl.registerLazySingleton(() => SettingsCubit(sl()));
+  sl.registerLazySingleton(() => SettingsCubit(sl(), sl()));
 
   // AI Chat
   sl.registerLazySingleton<EmbeddingService>(

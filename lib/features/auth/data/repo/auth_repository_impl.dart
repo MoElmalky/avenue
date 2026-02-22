@@ -79,6 +79,9 @@ class AuthRepositoryImpl implements AuthRepository {
   String? get currentUserId => supabase.auth.currentUser?.id;
 
   @override
+  String? get currentUserEmail => supabase.auth.currentUser?.email;
+
+  @override
   Future<Either<Failure, void>> createDeviceRecord(String deviceId) async {
     try {
       final userId = supabase.auth.currentUser?.id;

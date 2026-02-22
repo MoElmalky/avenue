@@ -4,7 +4,7 @@ import 'package:sqflite/sqflite.dart';
 import '../../features/schdules/data/models/task_model.dart';
 import '../../features/schdules/data/models/default_task_model.dart';
 import 'database_service.dart';
-import 'embedding_service.dart';
+// import 'embedding_service.dart'; // Removed: Supabase handles embedding generation
 import '../../features/auth/domain/repo/auth_repository.dart';
 import 'device_service.dart';
 import '../utils/observability.dart';
@@ -13,7 +13,7 @@ import 'task_notification_manager.dart';
 class SyncService {
   final DatabaseService databaseService;
   final SupabaseClient supabase;
-  final EmbeddingService embeddingService;
+  // final EmbeddingService embeddingService; // Removed
   final AuthRepository authRepository;
   final DeviceService deviceService;
   final TaskNotificationManager notificationManager;
@@ -24,7 +24,7 @@ class SyncService {
   SyncService({
     required this.databaseService,
     required this.supabase,
-    required this.embeddingService,
+    // required this.embeddingService, // Removed
     required this.authRepository,
     required this.deviceService,
     required this.notificationManager,
@@ -169,23 +169,8 @@ class SyncService {
         final tasksToPush = <Map<String, dynamic>>[];
         for (final m in localDirtyTasks) {
           final task = TaskModel.fromMap(m);
-          // Generate embedding on the fly if needed
-          final text =
-              "Name: ${task.name}. Desc: ${task.desc ?? ''}. Category: ${task.category}";
-          List<double>? embedding;
-          try {
-            embedding = await embeddingService.generateEmbedding(text);
-          } catch (e) {
-            AvenueLogger.log(
-              event: 'SYNC_EMBEDDING_FAILED',
-              level: LoggerLevel.WARN,
-              layer: LoggerLayer.SYNC,
-              payload: e.toString(),
-            );
-          }
-          tasksToPush.add(
-            task.copyWith(embedding: embedding).toSupabaseJson(userId),
-          );
+          // Embedding generation removed: Supabase now handles it on the server
+          tasksToPush.add(task.toSupabaseJson(userId));
         }
 
         AvenueLogger.log(
@@ -263,23 +248,8 @@ class SyncService {
         final defaultsToPush = <Map<String, dynamic>>[];
         for (final m in localDirtyDefaults) {
           final task = DefaultTaskModel.fromMap(m);
-          // Generate embedding on the fly
-          final text =
-              "Name: ${task.name}. Desc: ${task.desc ?? ''}. Category: ${task.category}";
-          List<double>? embedding;
-          try {
-            embedding = await embeddingService.generateEmbedding(text);
-          } catch (e) {
-            AvenueLogger.log(
-              event: 'SYNC_EMBEDDING_FAILED',
-              level: LoggerLevel.WARN,
-              layer: LoggerLayer.SYNC,
-              payload: e.toString(),
-            );
-          }
-          defaultsToPush.add(
-            task.copyWith(embedding: embedding).toSupabaseJson(userId),
-          );
+          // Embedding generation removed: Supabase now handles it on the server
+          defaultsToPush.add(task.toSupabaseJson(userId));
         }
 
         await supabase.from('default_tasks').upsert(defaultsToPush);
