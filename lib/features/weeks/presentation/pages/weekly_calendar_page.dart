@@ -22,6 +22,7 @@ class WeeklyCalendarPage extends StatefulWidget {
 class _WeeklyCalendarPageState extends State<WeeklyCalendarPage> {
   final ScrollController _scrollController = ScrollController();
   late DateTime _currentMonday;
+  double _hourHeight = 60.0; // Default height for 1 hour block
 
   @override
   void initState() {
@@ -105,6 +106,12 @@ class _WeeklyCalendarPageState extends State<WeeklyCalendarPage> {
                         WeeklyDaysRow(
                           days: days,
                           currentMonday: _currentMonday,
+                          currentZoom: _hourHeight,
+                          onZoomChanged: (newZoom) {
+                            setState(() {
+                              _hourHeight = newZoom;
+                            });
+                          },
                           onDayTapped: (date) async {
                             await Navigator.push(
                               context,
@@ -131,6 +138,7 @@ class _WeeklyCalendarPageState extends State<WeeklyCalendarPage> {
                             days: days,
                             state: state,
                             scrollController: _scrollController,
+                            hourHeight: _hourHeight,
                           ),
                         ),
                       ],

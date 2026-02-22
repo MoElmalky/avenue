@@ -12,12 +12,14 @@ class WeeklyGrid extends StatelessWidget {
   final List<DateTime> days;
   final WeeklyState state;
   final ScrollController scrollController;
+  final double hourHeight;
 
   const WeeklyGrid({
     super.key,
     required this.days,
     required this.state,
     required this.scrollController,
+    required this.hourHeight,
   });
 
   @override
@@ -49,10 +51,10 @@ class WeeklyGrid extends StatelessWidget {
           final timeOfDay = TimeOfDay(hour: index, minute: 0);
           final timeText = TimeUtils.formatTime(timeOfDay, is24Hour);
           return SizedBox(
-            height: 60.0,
+            height: hourHeight,
             child: Center(
               child: Padding(
-                padding: const EdgeInsets.only(bottom: 30.0),
+                padding: EdgeInsets.only(bottom: hourHeight / 2),
                 child: Text(
                   timeText,
                   style: TextStyle(
@@ -115,6 +117,7 @@ class WeeklyGrid extends StatelessWidget {
                     columnIndex: columns[task] ?? 0,
                     maxColumns: maxCols,
                     dayWidth: dayWidth,
+                    hourHeight: hourHeight,
                   ),
                 );
               }),
@@ -151,7 +154,7 @@ class WeeklyGrid extends StatelessWidget {
             );
           },
           child: Container(
-            height: 60,
+            height: hourHeight,
             decoration: BoxDecoration(
               border: Border(
                 right: BorderSide(

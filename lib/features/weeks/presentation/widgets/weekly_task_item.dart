@@ -7,6 +7,7 @@ class WeeklyTaskItem extends StatelessWidget {
   final int columnIndex;
   final int maxColumns;
   final double dayWidth;
+  final double hourHeight;
 
   const WeeklyTaskItem({
     super.key,
@@ -14,6 +15,7 @@ class WeeklyTaskItem extends StatelessWidget {
     required this.columnIndex,
     required this.maxColumns,
     required this.dayWidth,
+    required this.hourHeight,
   });
 
   @override
@@ -34,14 +36,14 @@ class WeeklyTaskItem extends StatelessWidget {
     }
 
     // Calc positioning based on 0-24 grid
-    final top = (startHour) * 60.0;
-    double height = (endHour - startHour) * 60.0;
+    final top = (startHour) * hourHeight;
+    double height = (endHour - startHour) * hourHeight;
 
     // Minimum visual height + clipping
     if (height < 20) height = 20;
 
     // Boundary check to prevent bleeding out of 24h
-    const bottomBoundary = 24.0 * 60.0;
+    final bottomBoundary = 24.0 * hourHeight;
     final finalHeight = (top + height > bottomBoundary)
         ? (bottomBoundary - top)
         : height;
@@ -63,7 +65,7 @@ class WeeklyTaskItem extends StatelessWidget {
         child: Container(
           width: (dayWidth / maxColumns) - 4,
           height: finalHeight,
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+          clipBehavior: Clip.hardEdge, // Prevent anything from overflowing
           decoration: BoxDecoration(
             color: task.completed
                 ? Colors.green.withOpacity(0.15)

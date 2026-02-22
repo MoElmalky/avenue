@@ -1,21 +1,27 @@
 import 'package:flutter/material.dart';
 
+import 'zoom_knob.dart';
+
 class WeeklyDaysRow extends StatelessWidget {
   final List<DateTime> days;
   final DateTime currentMonday;
+  final double currentZoom;
+  final ValueChanged<double> onZoomChanged;
   final Function(DateTime) onDayTapped;
 
   const WeeklyDaysRow({
     super.key,
     required this.days,
     required this.currentMonday,
+    required this.currentZoom,
+    required this.onZoomChanged,
     required this.onDayTapped,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final onSurface = theme.colorScheme.onBackground;
+    final onSurface = theme.colorScheme.onSurface;
 
     return Container(
       decoration: BoxDecoration(
@@ -30,7 +36,17 @@ class WeeklyDaysRow extends StatelessWidget {
       padding: const EdgeInsets.only(top: 8, bottom: 8),
       child: Row(
         children: [
-          const SizedBox(width: 60.0), // Spacer for time column
+          SizedBox(
+            width: 60.0,
+            child: Center(
+              child: ZoomKnob(
+                currentZoom: currentZoom,
+                minZoom: 20.0,
+                maxZoom: 150.0,
+                onZoomChanged: onZoomChanged,
+              ),
+            ),
+          ), // Zoom Knob replaces empty spacer
           Expanded(
             child: Row(
               children: days.map((date) {
