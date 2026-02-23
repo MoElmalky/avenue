@@ -1,4 +1,4 @@
-import 'open_router_http_client.dart';
+import '../../../core/services/open_router_client.dart';
 import 'ai_tools.dart';
 import 'ai_tool_executor.dart';
 import '../../schdules/domain/repo/schedule_repository.dart';
@@ -6,16 +6,16 @@ import '../../../core/utils/observability.dart';
 import 'package:uuid/uuid.dart';
 
 class AiRepository {
-  final OpenRouterHttpClient _client;
+  final OpenRouterClient _client;
   final AiToolExecutor _executor;
   final List<Map<String, dynamic>> _history = [];
   static const int _maxHistoryMessages = 15;
   static const int _maxToolIterations = 5;
 
   AiRepository({
-    required String apiKey,
+    required OpenRouterClient client,
     required ScheduleRepository scheduleRepository,
-  }) : _client = OpenRouterHttpClient(apiKey: apiKey),
+  }) : _client = client,
        _executor = AiToolExecutor(scheduleRepository);
 
   Future<Map<String, dynamic>> processUserMessage({

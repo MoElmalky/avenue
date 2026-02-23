@@ -1,4 +1,5 @@
 import '../../features/ai/ai/ai_orchestrator.dart';
+import '../../features/ai/ai/ai_repository.dart';
 import 'package:get_it/get_it.dart';
 import '../../features/schdules/data/datasources/task_local_data_source.dart';
 import '../../features/schdules/data/datasources/task_local_data_source_impl.dart';
@@ -28,6 +29,8 @@ import '../../features/ai/data/repositories/chat_repository.dart';
 import '../../features/settings/data/settings_repository.dart';
 import '../../features/settings/presentation/cubit/settings_cubit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../helpers/cache_helper.dart';
+import '../services/open_router_client.dart';
 
 final sl = GetIt.instance;
 
@@ -41,6 +44,7 @@ Future<void> initializeDependencies() async {
   // External
   final sharedPreferences = await SharedPreferences.getInstance();
   sl.registerLazySingleton(() => sharedPreferences);
+  sl.registerLazySingleton(() => CacheHelper(sl()));
 
   // Register DatabaseService
   final databaseService = DatabaseService();
@@ -109,17 +113,19 @@ Future<void> initializeDependencies() async {
   sl.registerFactory(() => DefaultTasksCubit(sl()));
 
   // AI Chat
+  sl.registerLazySingleton<OpenRouterClient>(
+    () => OpenRouterClient(apiKey: dotenv.env['OPENROUTER_API_KEY'] ?? ''),
+  );
+
+  sl.registerLazySingleton<AiRepository>(
+    () => AiRepository(client: sl(), scheduleRepository: sl()),
+  );
+
   sl.registerLazySingleton<EmbeddingService>(
     () => EmbeddingService(apiKey: dotenv.env['OPENROUTER_API_KEY'] ?? ''),
   );
 
-  sl.registerFactory<AiOrchestrator>(
-    () => AiOrchestrator(
-      apiKey: dotenv.env['OPENROUTER_API_KEY'] ?? '',
-      scheduleRepository: sl(),
-      embeddingService: sl(),
-    ),
-  );
+  sl.registerFactory<AiOrchestrator>(() => AiOrchestrator(repository: sl()));
 
   // Chat Repository
   sl.registerLazySingleton<ChatRepository>(

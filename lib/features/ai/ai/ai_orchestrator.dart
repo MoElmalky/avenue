@@ -1,22 +1,13 @@
-import '../../schdules/domain/repo/schedule_repository.dart';
 import 'ai_action_models.dart';
 import 'ai_prompt_builder.dart';
 import 'ai_response_parser.dart';
 import 'ai_repository.dart';
-import '../../../core/services/embedding_service.dart';
 import '../../../core/utils/observability.dart';
 
 class AiOrchestrator {
   final AiRepository _repository;
 
-  AiOrchestrator({
-    required String apiKey,
-    required ScheduleRepository scheduleRepository,
-    required EmbeddingService embeddingService,
-  }) : _repository = AiRepository(
-         apiKey: apiKey,
-         scheduleRepository: scheduleRepository,
-       );
+  AiOrchestrator({required AiRepository repository}) : _repository = repository;
 
   Future<(String, List<AiAction>, String?)> processUserMessage(
     String message, {

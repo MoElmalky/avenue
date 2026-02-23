@@ -1,12 +1,12 @@
+import 'package:avenue/core/helpers/cache_helper.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SettingsRepository {
-  final SharedPreferences _prefs;
+  final CacheHelper _cacheHelper;
   final SupabaseClient _supabase;
 
-  SettingsRepository(this._prefs, this._supabase);
+  SettingsRepository(this._cacheHelper, this._supabase);
 
   static const String _keyWeekStartDay = 'week_start_day';
   static const String _keyIs24HourFormat = 'is_24_hour_format';
@@ -15,34 +15,35 @@ class SettingsRepository {
 
   // Default: Monday (1)
   int getWeekStartDay() {
-    return _prefs.getInt(_keyWeekStartDay) ?? 1; // DateTime.monday
+    return _cacheHelper.getData(key: _keyWeekStartDay) as int? ??
+        1; // DateTime.monday
   }
 
   Future<void> setWeekStartDay(int day) async {
-    await _prefs.setInt(_keyWeekStartDay, day);
+    await _cacheHelper.setData(key: _keyWeekStartDay, value: day);
   }
 
   // Default: 12-hour format (false)
   bool getIs24HourFormat() {
-    return _prefs.getBool(_keyIs24HourFormat) ?? false;
+    return _cacheHelper.getData(key: _keyIs24HourFormat) as bool? ?? false;
   }
 
   Future<void> setIs24HourFormat(bool is24Hour) async {
-    await _prefs.setBool(_keyIs24HourFormat, is24Hour);
+    await _cacheHelper.setData(key: _keyIs24HourFormat, value: is24Hour);
   }
 
   // Default: true
   bool getNotificationsEnabled() {
-    return _prefs.getBool(_keyNotificationsEnabled) ?? true;
+    return _cacheHelper.getData(key: _keyNotificationsEnabled) as bool? ?? true;
   }
 
   Future<void> setNotificationsEnabled(bool enabled) async {
-    await _prefs.setBool(_keyNotificationsEnabled, enabled);
+    await _cacheHelper.setData(key: _keyNotificationsEnabled, value: enabled);
   }
 
   // Default: system
   ThemeMode getThemeMode() {
-    final themeString = _prefs.getString(_keyThemeMode);
+    final themeString = _cacheHelper.getData(key: _keyThemeMode) as String?;
     if (themeString == null) return ThemeMode.system;
     return ThemeMode.values.firstWhere(
       (e) => e.name == themeString,
@@ -51,7 +52,7 @@ class SettingsRepository {
   }
 
   Future<void> setThemeMode(ThemeMode mode) async {
-    await _prefs.setString(_keyThemeMode, mode.name);
+    await _cacheHelper.setData(key: _keyThemeMode, value: mode.name);
   }
 
   Future<void> submitFeedback({

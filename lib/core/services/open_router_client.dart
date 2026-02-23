@@ -1,15 +1,15 @@
 import 'dart:convert';
 import 'dart:io';
-import '../../../core/utils/observability.dart';
+import '../utils/observability.dart';
 
-class OpenRouterHttpClient {
+class OpenRouterClient {
   final String apiKey;
   final String model;
   final String baseUrl = 'https://openrouter.ai/api/v1/chat/completions';
 
-  OpenRouterHttpClient({
+  OpenRouterClient({
     required this.apiKey,
-    this.model = 'google/gemini-2.0-flash-001',
+    this.model = 'stepfun/step-3.5-flash:free',
   });
 
   Future<Map<String, dynamic>> generateContent({
