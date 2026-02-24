@@ -17,6 +17,7 @@ class SocialLoginRow extends StatelessWidget {
           children: [
             // Google (Functional)
             _buildSocialButton(
+              context: context,
               onTap: isLoading
                   ? null
                   : () {
@@ -32,6 +33,7 @@ class SocialLoginRow extends StatelessWidget {
 
             // Facebook (Functional)
             _buildSocialButton(
+              context: context,
               onTap: isLoading
                   ? null
                   : () {
@@ -49,10 +51,12 @@ class SocialLoginRow extends StatelessWidget {
   }
 
   Widget _buildSocialButton({
+    required BuildContext context,
     required VoidCallback? onTap,
     required String assetPath,
     bool isLoading = false,
   }) {
+    final theme = Theme.of(context);
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
@@ -61,9 +65,12 @@ class SocialLoginRow extends StatelessWidget {
         height: 60,
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: theme.colorScheme.surface,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withOpacity(0.2), width: 1),
+          border: Border.all(
+            color: theme.colorScheme.onSurface.withOpacity(0.1),
+            width: 1,
+          ),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.05),

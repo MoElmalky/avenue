@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:avenue/core/logic/theme_cubit.dart';
 import 'package:avenue/core/utils/constants.dart';
@@ -26,6 +27,17 @@ class SettingsView extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
+          const SizedBox(height: 8),
+          Center(
+            child: SvgPicture.asset(
+              fit: BoxFit.scaleDown,
+              'assets/icon/avenue.svg',
+              height: 100,
+              width: 100,
+              semanticsLabel: 'Avenue Logo',
+            ),
+          ),
+          const SizedBox(height: 24),
           _buildBetaBanner(context),
           const SizedBox(height: 16),
           _buildFeedbackSection(context),
@@ -142,11 +154,24 @@ class SettingsView extends StatelessWidget {
           ),
           const SizedBox(height: 40),
           Center(
-            child: Text(
-              "Avenue v0.1.0-beta",
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.5),
-              ),
+            child: Column(
+              children: [
+                SvgPicture.asset(
+                  'assets/icon/avenue.svg',
+                  height: 48,
+                  colorFilter: ColorFilter.mode(
+                    theme.colorScheme.onSurface.withOpacity(0.2),
+                    BlendMode.srcIn,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  "Avenue v0.1.0-beta",
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withOpacity(0.5),
+                  ),
+                ),
+              ],
             ),
           ),
         ],

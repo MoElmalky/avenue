@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../cubit/auth_cubit.dart';
 import '../cubit/auth_state.dart';
 import '../../../../core/utils/constants.dart';
@@ -48,8 +49,11 @@ class _RegisterViewState extends State<RegisterView> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: AppColors.deepPurple,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: BlocListener<AuthCubit, AuthState>(
         listener: (context, state) {
           if (state is Authenticated) {
@@ -69,7 +73,8 @@ class _RegisterViewState extends State<RegisterView> {
                 height: 250,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColors.slatePurple.withOpacity(0.2),
+                  color: (isDark ? AppColors.slatePurple : AppColors.creamTan)
+                      .withOpacity(0.1),
                 ),
               ),
             ),
@@ -84,14 +89,21 @@ class _RegisterViewState extends State<RegisterView> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        const Text(
+                        SvgPicture.asset(
+                          'assets/icon/avenue.svg',
+                          height: 110,
+                          width: 110,
+                          semanticsLabel: 'Avenue Logo',
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
                           "Join Avenue",
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 36,
                             fontWeight: FontWeight.w900,
                             letterSpacing: -1,
-                            color: Colors.white,
+                            color: isDark ? Colors.white : AppColors.deepPurple,
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -100,7 +112,9 @@ class _RegisterViewState extends State<RegisterView> {
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 16,
-                            color: Colors.white.withOpacity(0.6),
+                            color: theme.colorScheme.onBackground.withOpacity(
+                              0.6,
+                            ),
                           ),
                         ),
                         const SizedBox(height: 48),
@@ -135,7 +149,9 @@ class _RegisterViewState extends State<RegisterView> {
                               _obscurePassword
                                   ? Icons.visibility_off_rounded
                                   : Icons.visibility_rounded,
-                              color: Colors.white60,
+                              color: theme.colorScheme.onSurface.withOpacity(
+                                0.6,
+                              ),
                               size: 20,
                             ),
                             onPressed: () => setState(
@@ -163,7 +179,9 @@ class _RegisterViewState extends State<RegisterView> {
                               _obscureConfirmPassword
                                   ? Icons.visibility_off_rounded
                                   : Icons.visibility_rounded,
-                              color: Colors.white60,
+                              color: theme.colorScheme.onSurface.withOpacity(
+                                0.6,
+                              ),
                               size: 20,
                             ),
                             onPressed: () => setState(
@@ -239,7 +257,8 @@ class _RegisterViewState extends State<RegisterView> {
                             Text(
                               "Already have an account?",
                               style: TextStyle(
-                                color: Colors.white.withOpacity(0.6),
+                                color: theme.colorScheme.onBackground
+                                    .withOpacity(0.6),
                               ),
                             ),
                             TextButton(
@@ -275,26 +294,33 @@ class _RegisterViewState extends State<RegisterView> {
     TextInputType? keyboardType,
     String? Function(String?)? validator,
   }) {
+    final theme = Theme.of(context);
     return TextFormField(
       controller: controller,
       obscureText: obscureText,
       keyboardType: keyboardType,
-      style: const TextStyle(color: Colors.white),
+      style: TextStyle(color: theme.colorScheme.onSurface),
       validator: validator,
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(color: Colors.white60),
-        prefixIcon: Icon(icon, color: Colors.white60, size: 22),
+        labelStyle: TextStyle(
+          color: theme.colorScheme.onSurface.withOpacity(0.6),
+        ),
+        prefixIcon: Icon(
+          icon,
+          color: theme.colorScheme.onSurface.withOpacity(0.6),
+          size: 22,
+        ),
         suffixIcon: suffixIcon,
         filled: true,
-        fillColor: AppColors.slatePurple.withOpacity(0.3),
+        fillColor: theme.colorScheme.onSurface.withOpacity(0.05),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: AppColors.creamTan, width: 1.5),
+          borderSide: BorderSide(color: theme.colorScheme.primary, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
