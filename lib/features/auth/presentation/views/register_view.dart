@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import '../cubit/auth_cubit.dart';
 import '../cubit/auth_state.dart';
 import '../../../../core/utils/constants.dart';
+import '../widgets/auth_header.dart';
 
 class RegisterView extends StatefulWidget {
   const RegisterView({super.key});
@@ -66,215 +66,196 @@ class _RegisterViewState extends State<RegisterView> {
           children: [
             // Background Decorative Elements
             Positioned(
-              bottom: -50,
-              left: -50,
+              top: -100,
+              right: -100,
               child: Container(
-                width: 250,
-                height: 250,
+                width: 300,
+                height: 300,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: (isDark ? AppColors.slatePurple : AppColors.creamTan)
-                      .withOpacity(0.1),
+                      .withOpacity(0.08),
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: -150,
+              left: -100,
+              child: Container(
+                width: 300,
+                height: 300,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: (isDark ? AppColors.salmonPink : AppColors.deepPurple)
+                      .withOpacity(0.05),
                 ),
               ),
             ),
 
             SafeArea(
-              child: Center(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 32),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        SvgPicture.asset(
-                          'assets/icon/avenue.svg',
-                          height: 110,
-                          width: 110,
-                          semanticsLabel: 'Avenue Logo',
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          "Join Avenue",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 36,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: -1,
-                            color: isDark ? Colors.white : AppColors.deepPurple,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(32, 60, 32, 32),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const AuthHeader(
+                        title: "Join Avenue",
+                        subtitle: "Create an account to start syncing",
+                      ),
+                      const SizedBox(height: 48),
+
+                      // Email Field
+                      _buildTextField(
+                        controller: _emailController,
+                        label: "Email",
+                        icon: Icons.alternate_email_rounded,
+                        keyboardType: TextInputType.emailAddress,
+                        validator: (v) {
+                          if (v == null || v.isEmpty)
+                            return "Email is required";
+                          if (!RegExp(
+                            r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                          ).hasMatch(v)) {
+                            return "Invalid email format";
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Password Field
+                      _buildTextField(
+                        controller: _passwordController,
+                        label: "Password",
+                        icon: Icons.lock_outline_rounded,
+                        obscureText: _obscurePassword,
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscurePassword
+                                ? Icons.visibility_off_rounded
+                                : Icons.visibility_rounded,
+                            color: theme.colorScheme.onSurface.withOpacity(0.6),
+                            size: 20,
+                          ),
+                          onPressed: () => setState(
+                            () => _obscurePassword = !_obscurePassword,
                           ),
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          "Create an account to start syncing",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: theme.colorScheme.onBackground.withOpacity(
-                              0.6,
-                            ),
+                        validator: (v) {
+                          if (v == null || v.isEmpty)
+                            return "Password is required";
+                          if (v.length < 6)
+                            return "Password must be at least 6 characters";
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Confirm Password Field
+                      _buildTextField(
+                        controller: _confirmPasswordController,
+                        label: "Confirm Password",
+                        icon: Icons.lock_clock_outlined,
+                        obscureText: _obscureConfirmPassword,
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscureConfirmPassword
+                                ? Icons.visibility_off_rounded
+                                : Icons.visibility_rounded,
+                            color: theme.colorScheme.onSurface.withOpacity(0.6),
+                            size: 20,
+                          ),
+                          onPressed: () => setState(
+                            () => _obscureConfirmPassword =
+                                !_obscureConfirmPassword,
                           ),
                         ),
-                        const SizedBox(height: 48),
+                        validator: (v) {
+                          if (v == null || v.isEmpty)
+                            return "Confirm your password";
+                          if (v != _passwordController.text)
+                            return "Passwords do not match";
+                          return null;
+                        },
+                      ),
 
-                        // Email Field
-                        _buildTextField(
-                          controller: _emailController,
-                          label: "Email",
-                          icon: Icons.alternate_email_rounded,
-                          keyboardType: TextInputType.emailAddress,
-                          validator: (v) {
-                            if (v == null || v.isEmpty)
-                              return "Email is required";
-                            if (!RegExp(
-                              r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                            ).hasMatch(v)) {
-                              return "Invalid email format";
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 20),
+                      const SizedBox(height: 32),
 
-                        // Password Field
-                        _buildTextField(
-                          controller: _passwordController,
-                          label: "Password",
-                          icon: Icons.lock_outline_rounded,
-                          obscureText: _obscurePassword,
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscurePassword
-                                  ? Icons.visibility_off_rounded
-                                  : Icons.visibility_rounded,
-                              color: theme.colorScheme.onSurface.withOpacity(
-                                0.6,
+                      // Register Button
+                      BlocBuilder<AuthCubit, AuthState>(
+                        builder: (context, state) {
+                          return ElevatedButton(
+                            onPressed: state is AuthLoading
+                                ? null
+                                : () {
+                                    if (_formKey.currentState!.validate()) {
+                                      context.read<AuthCubit>().signUp(
+                                        email: _emailController.text.trim(),
+                                        password: _passwordController.text
+                                            .trim(),
+                                      );
+                                    }
+                                  },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.creamTan,
+                              foregroundColor: AppColors.deepPurple,
+                              padding: const EdgeInsets.symmetric(vertical: 18),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
                               ),
-                              size: 20,
+                              elevation: 0,
                             ),
-                            onPressed: () => setState(
-                              () => _obscurePassword = !_obscurePassword,
-                            ),
-                          ),
-                          validator: (v) {
-                            if (v == null || v.isEmpty)
-                              return "Password is required";
-                            if (v.length < 6)
-                              return "Password must be at least 6 characters";
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 20),
-
-                        // Confirm Password Field
-                        _buildTextField(
-                          controller: _confirmPasswordController,
-                          label: "Confirm Password",
-                          icon: Icons.lock_clock_outlined,
-                          obscureText: _obscureConfirmPassword,
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscureConfirmPassword
-                                  ? Icons.visibility_off_rounded
-                                  : Icons.visibility_rounded,
-                              color: theme.colorScheme.onSurface.withOpacity(
-                                0.6,
-                              ),
-                              size: 20,
-                            ),
-                            onPressed: () => setState(
-                              () => _obscureConfirmPassword =
-                                  !_obscureConfirmPassword,
-                            ),
-                          ),
-                          validator: (v) {
-                            if (v == null || v.isEmpty)
-                              return "Confirm your password";
-                            if (v != _passwordController.text)
-                              return "Passwords do not match";
-                            return null;
-                          },
-                        ),
-
-                        const SizedBox(height: 32),
-
-                        // Register Button
-                        BlocBuilder<AuthCubit, AuthState>(
-                          builder: (context, state) {
-                            return ElevatedButton(
-                              onPressed: state is AuthLoading
-                                  ? null
-                                  : () {
-                                      if (_formKey.currentState!.validate()) {
-                                        context.read<AuthCubit>().signUp(
-                                          email: _emailController.text.trim(),
-                                          password: _passwordController.text
-                                              .trim(),
-                                        );
-                                      }
-                                    },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.creamTan,
-                                foregroundColor: AppColors.deepPurple,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 18,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                elevation: 0,
-                              ),
-                              child: state is AuthLoading
-                                  ? const SizedBox(
-                                      height: 24,
-                                      width: 24,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        valueColor:
-                                            AlwaysStoppedAnimation<Color>(
-                                              AppColors.deepPurple,
-                                            ),
-                                      ),
-                                    )
-                                  : const Text(
-                                      "Create Account",
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
+                            child: state is AuthLoading
+                                ? const SizedBox(
+                                    height: 24,
+                                    width: 24,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        AppColors.deepPurple,
                                       ),
                                     ),
-                            );
-                          },
-                        ),
+                                  )
+                                : const Text(
+                                    "Create Account",
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                          );
+                        },
+                      ),
 
-                        const SizedBox(height: 24),
+                      const SizedBox(height: 24),
 
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              "Already have an account?",
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            "Already have an account?",
+                            style: TextStyle(
+                              color: theme.colorScheme.onSurface.withOpacity(
+                                0.6,
+                              ),
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () => context.pop(),
+                            child: const Text(
+                              "Sign In",
                               style: TextStyle(
-                                color: theme.colorScheme.onBackground
-                                    .withOpacity(0.6),
+                                color: AppColors.salmonPink,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
-                            TextButton(
-                              onPressed: () => context.pop(),
-                              child: const Text(
-                                "Sign In",
-                                style: TextStyle(
-                                  color: AppColors.salmonPink,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
               ),

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import '../cubit/auth_cubit.dart';
 import '../cubit/auth_state.dart';
 import '../../../../core/utils/constants.dart';
 import '../widgets/social_login_row.dart';
+import '../widgets/auth_header.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -72,214 +72,198 @@ class _LoginViewState extends State<LoginView> {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: (isDark ? AppColors.slatePurple : AppColors.creamTan)
-                      .withOpacity(0.1),
+                      .withOpacity(0.08),
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: -150,
+              left: -100,
+              child: Container(
+                width: 300,
+                height: 300,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: (isDark ? AppColors.salmonPink : AppColors.deepPurple)
+                      .withOpacity(0.05),
                 ),
               ),
             ),
 
             SafeArea(
-              child: Center(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 32),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        SvgPicture.asset(
-                          'assets/icon/avenue.svg',
-                          height: 140,
-                          width: 140,
-                          semanticsLabel: 'Avenue Logo',
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          "Avenue",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 48,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: -2,
-                            color: isDark ? Colors.white : AppColors.deepPurple,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(32, 60, 32, 32),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const AuthHeader(
+                        title: "Avenue",
+                        subtitle: "Your productivity companion",
+                      ),
+                      const SizedBox(height: 48),
+
+                      // Email Field
+                      _buildTextField(
+                        controller: _emailController,
+                        label: "Email",
+                        icon: Icons.alternate_email_rounded,
+                        keyboardType: TextInputType.emailAddress,
+                        validator: (v) {
+                          if (v == null || v.isEmpty)
+                            return "Email is required";
+                          if (!RegExp(
+                            r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                          ).hasMatch(v)) {
+                            return "Invalid email format";
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Password Field
+                      _buildTextField(
+                        controller: _passwordController,
+                        label: "Password",
+                        icon: Icons.lock_outline_rounded,
+                        obscureText: _obscurePassword,
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscurePassword
+                                ? Icons.visibility_off_rounded
+                                : Icons.visibility_rounded,
+                            color: theme.colorScheme.onSurface.withOpacity(0.6),
+                            size: 20,
+                          ),
+                          onPressed: () => setState(
+                            () => _obscurePassword = !_obscurePassword,
                           ),
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          "Your productivity companion",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: theme.colorScheme.onBackground.withOpacity(
-                              0.6,
+                        validator: (v) =>
+                            v!.isEmpty ? "Password is required" : null,
+                      ),
+
+                      const SizedBox(height: 32),
+
+                      // Login Button
+                      BlocBuilder<AuthCubit, AuthState>(
+                        builder: (context, state) {
+                          return ElevatedButton(
+                            onPressed:
+                                (state is AuthLoading &&
+                                    state.source == AuthLoadingSource.email)
+                                ? null
+                                : () {
+                                    if (_formKey.currentState!.validate()) {
+                                      context.read<AuthCubit>().signIn(
+                                        email: _emailController.text.trim(),
+                                        password: _passwordController.text
+                                            .trim(),
+                                      );
+                                    }
+                                  },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.creamTan,
+                              foregroundColor: AppColors.deepPurple,
+                              padding: const EdgeInsets.symmetric(vertical: 18),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              elevation: 0,
+                            ),
+                            child:
+                                (state is AuthLoading &&
+                                    state.source == AuthLoadingSource.email)
+                                ? const SizedBox(
+                                    height: 24,
+                                    width: 24,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        AppColors.deepPurple,
+                                      ),
+                                    ),
+                                  )
+                                : const Text(
+                                    "Sign In",
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                          );
+                        },
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      // Divider
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Divider(
+                              color: theme.colorScheme.onSurface.withOpacity(
+                                0.1,
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 48),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Text(
+                              "OR",
+                              style: TextStyle(
+                                color: theme.colorScheme.onSurface.withOpacity(
+                                  0.5,
+                                ),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: Divider(
+                              color: theme.colorScheme.onSurface.withOpacity(
+                                0.1,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
 
-                        // Email Field
-                        _buildTextField(
-                          controller: _emailController,
-                          label: "Email",
-                          icon: Icons.alternate_email_rounded,
-                          keyboardType: TextInputType.emailAddress,
-                          validator: (v) {
-                            if (v == null || v.isEmpty)
-                              return "Email is required";
-                            if (!RegExp(
-                              r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                            ).hasMatch(v)) {
-                              return "Invalid email format";
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 20),
+                      const SizedBox(height: 24),
 
-                        // Password Field
-                        _buildTextField(
-                          controller: _passwordController,
-                          label: "Password",
-                          icon: Icons.lock_outline_rounded,
-                          obscureText: _obscurePassword,
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscurePassword
-                                  ? Icons.visibility_off_rounded
-                                  : Icons.visibility_rounded,
+                      // Social Login Row (Google, Apple, Facebook)
+                      const SocialLoginRow(),
+
+                      const SizedBox(height: 24),
+
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            "New to Avenue?",
+                            style: TextStyle(
                               color: theme.colorScheme.onSurface.withOpacity(
                                 0.6,
                               ),
-                              size: 20,
-                            ),
-                            onPressed: () => setState(
-                              () => _obscurePassword = !_obscurePassword,
                             ),
                           ),
-                          validator: (v) =>
-                              v!.isEmpty ? "Password is required" : null,
-                        ),
-
-                        const SizedBox(height: 32),
-
-                        // Login Button
-                        BlocBuilder<AuthCubit, AuthState>(
-                          builder: (context, state) {
-                            return ElevatedButton(
-                              onPressed:
-                                  (state is AuthLoading &&
-                                      state.source == AuthLoadingSource.email)
-                                  ? null
-                                  : () {
-                                      if (_formKey.currentState!.validate()) {
-                                        context.read<AuthCubit>().signIn(
-                                          email: _emailController.text.trim(),
-                                          password: _passwordController.text
-                                              .trim(),
-                                        );
-                                      }
-                                    },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.creamTan,
-                                foregroundColor: AppColors.deepPurple,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 18,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                elevation: 0,
-                              ),
-                              child:
-                                  (state is AuthLoading &&
-                                      state.source == AuthLoadingSource.email)
-                                  ? const SizedBox(
-                                      height: 24,
-                                      width: 24,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        valueColor:
-                                            AlwaysStoppedAnimation<Color>(
-                                              AppColors.deepPurple,
-                                            ),
-                                      ),
-                                    )
-                                  : const Text(
-                                      "Sign In",
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                            );
-                          },
-                        ),
-
-                        const SizedBox(height: 24),
-
-                        // Divider
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Divider(
-                                color: theme.colorScheme.onBackground
-                                    .withOpacity(0.1),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                              ),
-                              child: Text(
-                                "OR",
-                                style: TextStyle(
-                                  color: theme.colorScheme.onBackground
-                                      .withOpacity(0.5),
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              child: Divider(
-                                color: theme.colorScheme.onBackground
-                                    .withOpacity(0.1),
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        const SizedBox(height: 24),
-
-                        // Social Login Row (Google, Apple, Facebook)
-                        const SocialLoginRow(),
-
-                        const SizedBox(height: 24),
-
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              "New to Avenue?",
+                          TextButton(
+                            onPressed: () => context.push('/register'),
+                            child: const Text(
+                              "Create Account",
                               style: TextStyle(
-                                color: theme.colorScheme.onBackground
-                                    .withOpacity(0.6),
+                                color: AppColors.salmonPink,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
-                            TextButton(
-                              onPressed: () => context.push('/register'),
-                              child: const Text(
-                                "Create Account",
-                                style: TextStyle(
-                                  color: AppColors.salmonPink,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
               ),
