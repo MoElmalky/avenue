@@ -39,7 +39,7 @@ class WeeklyDaysRow extends StatelessWidget {
           Expanded(
             flex: 1,
             child: Padding(
-              padding: const EdgeInsets.only(left: 12.0, right: 4.0),
+              padding: const EdgeInsets.only(left: 5),
               child: Center(
                 child: DragZoomRing(
                   value: currentZoom,

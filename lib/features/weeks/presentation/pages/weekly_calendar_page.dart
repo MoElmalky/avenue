@@ -74,7 +74,6 @@ class _WeeklyCalendarPageState extends State<WeeklyCalendarPage> {
               return Scaffold(
                 backgroundColor: theme.scaffoldBackgroundColor,
                 body: SafeArea(
-                  bottom: false,
                   child: BlocListener<TaskCubit, TaskState>(
                     listener: (context, taskState) {
                       // If a task was added, updated, or deleted, reload the week

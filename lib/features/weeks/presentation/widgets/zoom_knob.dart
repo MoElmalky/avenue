@@ -121,9 +121,6 @@ class _DragZoomRingState extends State<DragZoomRing>
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final activeRingColor = widget.ringColor ?? theme.colorScheme.primary;
-    final bgColor =
-        widget.backgroundColor ??
-        (isDark ? const Color(0xFF2C2C2E) : Colors.white);
 
     final range = widget.maxValue - widget.minValue;
     final progress = range == 0
@@ -140,37 +137,89 @@ class _DragZoomRingState extends State<DragZoomRing>
         child: Stack(
           alignment: Alignment.center,
           children: [
-            // Background circular shape
+            // 3D Outer Bezel/Shadow container
             Container(
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: bgColor,
                 boxShadow: [
+                  // Outer deep shadow
                   BoxShadow(
-                    color: Colors.black.withOpacity(isDark ? 0.35 : 0.08),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                    spreadRadius: 2,
+                    color: Colors.black.withOpacity(isDark ? 0.5 : 0.15),
+                    blurRadius: 15,
+                    offset: const Offset(5, 8),
+                    spreadRadius: 1,
+                  ),
+                  // Top light highlight for 3D effect
+                  BoxShadow(
+                    color: isDark
+                        ? Colors.white.withOpacity(0.08)
+                        : Colors.white.withOpacity(0.9),
+                    blurRadius: 10,
+                    offset: const Offset(-4, -4),
                   ),
                 ],
-                border: Border.all(
-                  color: isDark
-                      ? Colors.white10
-                      : Colors.black.withOpacity(0.05),
-                  width: 1,
+              ),
+              child: Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: isDark
+                        ? [
+                            const Color(0xFF3A3A3C),
+                            const Color(0xFF2C2C2E),
+                            const Color(0xFF1C1C1E),
+                          ]
+                        : [
+                            Colors.white,
+                            const Color(0xFFF2F2F7),
+                            const Color(0xFFE5E5EA),
+                          ],
+                  ),
+                  border: Border.all(
+                    color: isDark
+                        ? Colors.white.withOpacity(0.12)
+                        : Colors.black.withOpacity(0.05),
+                    width: 1,
+                  ),
+                ),
+                child: Center(
+                  // 3D Inner Core Cap
+                  child: Container(
+                    width: 12,
+                    height: 12,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          activeRingColor.withOpacity(0.4),
+                          activeRingColor.withOpacity(0.1),
+                        ],
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 2,
+                          offset: const Offset(1, 1),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
 
-            // Progress Ring
+            // Progress Ring & Dial Ticks
             Positioned.fill(
               child: CustomPaint(
                 painter: _ProgressRingPainter(
                   progress: progress,
                   ringColor: activeRingColor,
                   bgColor: isDark
-                      ? Colors.white10
-                      : Colors.black.withOpacity(0.05),
+                      ? Colors.white.withOpacity(0.05)
+                      : Colors.black.withOpacity(0.03),
+                  isDark: isDark,
                 ),
               ),
             ),
@@ -185,19 +234,54 @@ class _ProgressRingPainter extends CustomPainter {
   final double progress;
   final Color ringColor;
   final Color bgColor;
+  final bool isDark;
 
   _ProgressRingPainter({
     required this.progress,
     required this.ringColor,
     required this.bgColor,
+    required this.isDark,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
-    final strokeWidth = 1.6; // Extremely thin line as requested
-    final radius = (math.min(size.width, size.height) / 2) - (strokeWidth / 2);
+    final strokeWidth = 1.8;
+    final radius = (math.min(size.width, size.height) / 2) - 4.0;
 
+    // Draw Decorative Dial Ticks (The "Lines")
+    final tickCount = 60;
+    final tickPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeWidth = 1.0;
+
+    for (int i = 0; i < tickCount; i++) {
+      final angle = (i * 2 * math.pi / tickCount) - math.pi / 2;
+      final isMajor = i % 5 == 0;
+      final tickLength = isMajor ? 6.0 : 3.0;
+
+      final innerRadius = radius - 8.0;
+      final outerRadius = innerRadius - tickLength;
+
+      tickPaint.color = (isDark ? Colors.white : Colors.black).withOpacity(
+        isMajor ? 0.15 : 0.08,
+      );
+
+      canvas.drawLine(
+        Offset(
+          center.dx + innerRadius * math.cos(angle),
+          center.dy + innerRadius * math.sin(angle),
+        ),
+        Offset(
+          center.dx + outerRadius * math.cos(angle),
+          center.dy + outerRadius * math.sin(angle),
+        ),
+        tickPaint,
+      );
+    }
+
+    // Draw Background Track
     final bgPaint = Paint()
       ..color = bgColor
       ..style = PaintingStyle.stroke
@@ -209,10 +293,11 @@ class _ProgressRingPainter extends CustomPainter {
     final startAngle = -math.pi / 2;
 
     if (progress > 0) {
+      // Glow/Neon layer
       final glowPaint = Paint()
-        ..color = ringColor.withOpacity(0.3)
+        ..color = ringColor.withOpacity(0.25)
         ..style = PaintingStyle.stroke
-        ..strokeWidth = strokeWidth + 2.0
+        ..strokeWidth = strokeWidth + 2.5
         ..strokeCap = StrokeCap.round;
 
       canvas.drawArc(
@@ -223,6 +308,7 @@ class _ProgressRingPainter extends CustomPainter {
         glowPaint,
       );
 
+      // Main active arc
       final fgPaint = Paint()
         ..color = ringColor
         ..style = PaintingStyle.stroke
@@ -236,6 +322,28 @@ class _ProgressRingPainter extends CustomPainter {
         false,
         fgPaint,
       );
+
+      // 3D Terminal dot (Light reflection on dot)
+      final endAngle = startAngle + sweepAngle;
+      final dotOffset = Offset(
+        center.dx + radius * math.cos(endAngle),
+        center.dy + radius * math.sin(endAngle),
+      );
+
+      final dotShadowPaint = Paint()
+        ..color = Colors.black.withOpacity(0.2)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2.0);
+      canvas.drawCircle(dotOffset + const Offset(1, 1), 3.5, dotShadowPaint);
+
+      final dotPaint = Paint()
+        ..color = ringColor
+        ..style = PaintingStyle.fill;
+      canvas.drawCircle(dotOffset, 3.0, dotPaint);
+
+      final dotHighlightPaint = Paint()
+        ..color = Colors.white.withOpacity(0.8)
+        ..style = PaintingStyle.fill;
+      canvas.drawCircle(dotOffset - const Offset(1, 1), 1.0, dotHighlightPaint);
     }
   }
 
@@ -243,6 +351,7 @@ class _ProgressRingPainter extends CustomPainter {
   bool shouldRepaint(_ProgressRingPainter oldDelegate) {
     return oldDelegate.progress != progress ||
         oldDelegate.ringColor != ringColor ||
-        oldDelegate.bgColor != bgColor;
+        oldDelegate.bgColor != bgColor ||
+        oldDelegate.isDark != isDark;
   }
 }
