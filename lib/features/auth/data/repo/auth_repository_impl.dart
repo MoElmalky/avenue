@@ -200,6 +200,27 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<Either<Failure, String>> fetchUserRole() async {
+    try {
+      final userId = supabase.auth.currentUser?.id;
+      if (userId == null) {
+        return const Left(ServerFailure('User not logged in'));
+      }
+
+      final data = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('user_id', userId)
+          .maybeSingle();
+
+      final role = data?['role'] as String? ?? 'user';
+      return Right(role);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
   Stream<AuthEvent> get authEvents {
     return supabase.auth.onAuthStateChange.map((data) {
       switch (data.event) {

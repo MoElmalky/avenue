@@ -175,7 +175,9 @@ class _ZoomKnobState extends State<ZoomKnob>
                             width: 5,
                             height: 5,
                             decoration: BoxDecoration(
-                              color: theme.colorScheme.primary,
+                              color: isDark
+                                  ? Colors.white
+                                  : theme.colorScheme.primary,
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
