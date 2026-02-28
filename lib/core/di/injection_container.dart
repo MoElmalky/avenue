@@ -28,6 +28,7 @@ import '../../features/auth/domain/repo/auth_repository.dart';
 import '../../features/auth/presentation/cubit/auth_cubit.dart';
 import '../logic/theme_cubit.dart';
 import '../logic/app_connectivity_cubit.dart';
+import '../logic/app_banner_cubit.dart';
 import '../network/request_executor.dart';
 import '../../features/ai/data/repositories/chat_repository.dart';
 import '../../features/settings/data/settings_repository.dart';
@@ -66,6 +67,7 @@ Future<void> initializeDependencies() async {
     () => RequestExecutor(networkService: sl()),
   );
   sl.registerLazySingleton(() => AppConnectivityCubit(networkService: sl()));
+  sl.registerLazySingleton(() => AppBannerCubit());
   sl.registerLazySingleton<DeviceService>(() => DeviceService());
   sl.registerLazySingleton<LocalNotificationService>(
     () => LocalNotificationService.instance,

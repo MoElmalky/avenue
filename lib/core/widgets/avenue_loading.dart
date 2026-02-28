@@ -82,31 +82,34 @@ class AvenueLoadingOverlay extends StatelessWidget {
         AnimatedSwitcher(
           duration: const Duration(milliseconds: 300),
           child: isLoading
-              ? Container(
-                  key: const ValueKey('avenue_loading_overlay'),
-                  color: AppColors.deepPurple.withOpacity(0.4),
-                  child: Stack(
-                    children: [
-                      // Backdrop Blur Effect
-                      Positioned.fill(
-                        child: ClipRect(
-                          child: BackdropFilter(
-                            filter: ui.ImageFilter.blur(
-                              sigmaX: 1.0,
-                              sigmaY: 1.0,
-                            ),
-                            child: Container(
-                              color: Colors.black.withOpacity(0.1),
+              ? AbsorbPointer(
+                  absorbing: true,
+                  child: Container(
+                    key: const ValueKey('avenue_loading_overlay'),
+                    color: AppColors.deepPurple.withOpacity(0.4),
+                    child: Stack(
+                      children: [
+                        // Backdrop Blur Effect
+                        Positioned.fill(
+                          child: ClipRect(
+                            child: BackdropFilter(
+                              filter: ui.ImageFilter.blur(
+                                sigmaX: 1.0,
+                                sigmaY: 1.0,
+                              ),
+                              child: Container(
+                                color: Colors.black.withOpacity(0.1),
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      Center(
-                        child: AvenueLoadingIndicator(
-                          message: message ?? "Loading...",
+                        Center(
+                          child: AvenueLoadingIndicator(
+                            message: message ?? "Loading...",
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 )
               : const SizedBox.shrink(),

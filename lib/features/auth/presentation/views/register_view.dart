@@ -7,7 +7,6 @@ import '../../../../core/utils/constants.dart';
 import '../widgets/auth_header.dart';
 import '../widgets/auth_text_field.dart';
 import '../widgets/auth_action_button.dart';
-import '../../../../core/widgets/avenue_loading.dart';
 import '../../../../core/widgets/offline_banner.dart';
 import '../../../../core/utils/validation.dart';
 
@@ -66,202 +65,196 @@ class _RegisterViewState extends State<RegisterView> {
 
     return BlocBuilder<AuthCubit, AuthState>(
       builder: (context, state) {
-        final shouldShowOverlay =
-            state is AuthLoading && state.source == AuthLoadingSource.other;
+        final isLoading = state is AuthLoading;
 
-        return AvenueLoadingOverlay(
-          isLoading: shouldShowOverlay,
-          child: Scaffold(
-            backgroundColor: theme.scaffoldBackgroundColor,
-            body: BlocListener<AuthCubit, AuthState>(
-              listener: (context, state) {
-                if (state is Authenticated) {
-                  context.go('/schedule');
-                } else if (state is AuthError) {
-                  _showErrorSnackBar(state.message);
-                }
-              },
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  // Background Decorative Elements
-                  Positioned(
-                    top: -100,
-                    right: -100,
-                    child: Container(
-                      width: 300,
-                      height: 300,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color:
-                            (isDark
-                                    ? AppColors.slatePurple
-                                    : AppColors.creamTan)
-                                .withOpacity(0.08),
-                      ),
+        return Scaffold(
+          backgroundColor: theme.scaffoldBackgroundColor,
+          body: ConnectivityBannerWrapper(
+            child: BlocListener<AuthCubit, AuthState>(
+            listener: (context, state) {
+              if (state is Authenticated) {
+                context.go('/schedule');
+              } else if (state is AuthError) {
+                _showErrorSnackBar(state.message);
+              }
+            },
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                // Background Decorative Elements
+                Positioned(
+                  top: -100,
+                  right: -100,
+                  child: Container(
+                    width: 300,
+                    height: 300,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color:
+                          (isDark ? AppColors.slatePurple : AppColors.creamTan)
+                              .withOpacity(0.08),
                     ),
                   ),
-                  Positioned(
-                    bottom: -150,
-                    left: -100,
-                    child: Container(
-                      width: 300,
-                      height: 300,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color:
-                            (isDark
-                                    ? AppColors.salmonPink
-                                    : AppColors.deepPurple)
-                                .withOpacity(0.05),
-                      ),
+                ),
+                Positioned(
+                  bottom: -150,
+                  left: -100,
+                  child: Container(
+                    width: 300,
+                    height: 300,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color:
+                          (isDark ? AppColors.salmonPink : AppColors.deepPurple)
+                              .withOpacity(0.05),
                     ),
                   ),
+                ),
 
-                  SafeArea(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.fromLTRB(32, 60, 32, 32),
-                      child: Form(
-                        key: _formKey,
-                        autovalidateMode: _autoValidateMode,
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            const AuthHeader(
-                              title: "Join Avenue",
-                              subtitle: "",
+                SafeArea(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(32, 60, 32, 32),
+                    child: Form(
+                      key: _formKey,
+                      autovalidateMode: _autoValidateMode,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const AuthHeader(title: "Join Avenue", subtitle: ""),
+                          const SizedBox(height: 48),
+
+                          // Email Field
+                          AuthTextField(
+                            key: _emailFieldKey,
+                            controller: _emailController,
+                            label: "Email",
+                            icon: Icons.alternate_email_rounded,
+                            keyboardType: TextInputType.emailAddress,
+                            validator: Validation.validateEmail,
+                          ),
+                          const SizedBox(height: 20),
+
+                          // Password Field
+                          AuthTextField(
+                            key: _passwordFieldKey,
+                            controller: _passwordController,
+                            label: "Password",
+                            icon: Icons.lock_outline_rounded,
+                            obscureText: _obscurePassword,
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscurePassword
+                                    ? Icons.visibility_off_rounded
+                                    : Icons.visibility_rounded,
+                                color: theme.colorScheme.onSurface.withOpacity(
+                                  0.6,
+                                ),
+                                size: 20,
+                              ),
+                              onPressed: () => setState(
+                                () => _obscurePassword = !_obscurePassword,
+                              ),
                             ),
-                            const SizedBox(height: 48),
+                            validator: Validation.validatePassword,
+                          ),
+                          const SizedBox(height: 20),
 
-                            // Email Field
-                            AuthTextField(
-                              key: _emailFieldKey,
-                              controller: _emailController,
-                              label: "Email",
-                              icon: Icons.alternate_email_rounded,
-                              keyboardType: TextInputType.emailAddress,
-                              validator: Validation.validateEmail,
+                          // Confirm Password Field
+                          AuthTextField(
+                            key: _confirmPasswordFieldKey,
+                            controller: _confirmPasswordController,
+                            label: "Confirm Password",
+                            icon: Icons.lock_clock_outlined,
+                            obscureText: _obscureConfirmPassword,
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscureConfirmPassword
+                                    ? Icons.visibility_off_rounded
+                                    : Icons.visibility_rounded,
+                                color: theme.colorScheme.onSurface.withOpacity(
+                                  0.6,
+                                ),
+                                size: 20,
+                              ),
+                              onPressed: () => setState(
+                                () => _obscureConfirmPassword =
+                                    !_obscureConfirmPassword,
+                              ),
                             ),
-                            const SizedBox(height: 20),
+                            validator: (v) =>
+                                Validation.validateConfirmPassword(
+                                  v,
+                                  _passwordController.text,
+                                ),
+                          ),
 
-                            // Password Field
-                            AuthTextField(
-                              key: _passwordFieldKey,
-                              controller: _passwordController,
-                              label: "Password",
-                              icon: Icons.lock_outline_rounded,
-                              obscureText: _obscurePassword,
-                              suffixIcon: IconButton(
-                                icon: Icon(
-                                  _obscurePassword
-                                      ? Icons.visibility_off_rounded
-                                      : Icons.visibility_rounded,
+                          const SizedBox(height: 32),
+
+                          // Register Button
+                          BlocBuilder<AuthCubit, AuthState>(
+                            builder: (context, state) {
+                              return AuthActionButton(
+                                text: "Create Account",
+                                isLoading:
+                                    state is AuthLoading &&
+                                    state.source == AuthLoadingSource.email,
+                                onPressed: () {
+                                  if (_formKey.currentState!.validate()) {
+                                    context.read<AuthCubit>().signUp(
+                                      email: _emailController.text.trim(),
+                                      password: _passwordController.text.trim(),
+                                    );
+                                  } else {
+                                    _emailFieldKey.currentState
+                                        ?.shakeIfInvalid();
+                                    _passwordFieldKey.currentState
+                                        ?.shakeIfInvalid();
+                                    _confirmPasswordFieldKey.currentState
+                                        ?.shakeIfInvalid();
+                                    setState(() {
+                                      _autoValidateMode =
+                                          AutovalidateMode.onUserInteraction;
+                                    });
+                                  }
+                                },
+                              );
+                            },
+                          ),
+
+                          const SizedBox(height: 24),
+
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                "Already have an account?",
+                                style: TextStyle(
                                   color: theme.colorScheme.onSurface
                                       .withOpacity(0.6),
-                                  size: 20,
-                                ),
-                                onPressed: () => setState(
-                                  () => _obscurePassword = !_obscurePassword,
                                 ),
                               ),
-                              validator: Validation.validatePassword,
-                            ),
-                            const SizedBox(height: 20),
-
-                            // Confirm Password Field
-                            AuthTextField(
-                              key: _confirmPasswordFieldKey,
-                              controller: _confirmPasswordController,
-                              label: "Confirm Password",
-                              icon: Icons.lock_clock_outlined,
-                              obscureText: _obscureConfirmPassword,
-                              suffixIcon: IconButton(
-                                icon: Icon(
-                                  _obscureConfirmPassword
-                                      ? Icons.visibility_off_rounded
-                                      : Icons.visibility_rounded,
-                                  color: theme.colorScheme.onSurface
-                                      .withOpacity(0.6),
-                                  size: 20,
-                                ),
-                                onPressed: () => setState(
-                                  () => _obscureConfirmPassword =
-                                      !_obscureConfirmPassword,
-                                ),
-                              ),
-                              validator: (v) =>
-                                  Validation.validateConfirmPassword(
-                                    v,
-                                    _passwordController.text,
-                                  ),
-                            ),
-
-                            const SizedBox(height: 32),
-
-                            // Register Button
-                            BlocBuilder<AuthCubit, AuthState>(
-                              builder: (context, state) {
-                                return AuthActionButton(
-                                  text: "Create Account",
-                                  isLoading:
-                                      state is AuthLoading &&
-                                      state.source == AuthLoadingSource.email,
-                                  onPressed: () {
-                                    if (_formKey.currentState!.validate()) {
-                                      context.read<AuthCubit>().signUp(
-                                        email: _emailController.text.trim(),
-                                        password: _passwordController.text
-                                            .trim(),
-                                      );
-                                    } else {
-                                      _emailFieldKey.currentState
-                                          ?.shakeIfInvalid();
-                                      _passwordFieldKey.currentState
-                                          ?.shakeIfInvalid();
-                                      _confirmPasswordFieldKey.currentState
-                                          ?.shakeIfInvalid();
-                                      setState(() {
-                                        _autoValidateMode =
-                                            AutovalidateMode.onUserInteraction;
-                                      });
-                                    }
-                                  },
-                                );
-                              },
-                            ),
-
-                            const SizedBox(height: 24),
-
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  "Already have an account?",
+                              TextButton(
+                                onPressed: isLoading
+                                    ? null
+                                    : () => context.pop(),
+                                child: const Text(
+                                  "Sign In",
                                   style: TextStyle(
-                                    color: theme.colorScheme.onSurface
-                                        .withOpacity(0.6),
+                                    color: AppColors.salmonPink,
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                                TextButton(
-                                  onPressed: () => context.pop(),
-                                  child: const Text(
-                                    "Sign In",
-                                    style: TextStyle(
-                                      color: AppColors.salmonPink,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
+            ),
             ),
           ),
         );

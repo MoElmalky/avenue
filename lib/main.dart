@@ -13,7 +13,7 @@ import 'package:sqlite3/open.dart';
 import 'package:avenue/core/utils/constants.dart';
 import 'package:avenue/core/logic/theme_cubit.dart';
 import 'package:avenue/core/logic/app_connectivity_cubit.dart';
-import 'package:avenue/core/widgets/offline_banner.dart';
+import 'package:avenue/core/logic/app_banner_cubit.dart';
 import 'package:avenue/features/settings/presentation/cubit/settings_cubit.dart';
 import 'package:avenue/core/services/local_notification_service.dart';
 
@@ -58,15 +58,13 @@ class Avenue extends StatelessWidget {
         BlocProvider(create: (context) => sl<ThemeCubit>()),
         BlocProvider(create: (context) => sl<SettingsCubit>()),
         BlocProvider(create: (context) => sl<AppConnectivityCubit>()),
+        BlocProvider(create: (context) => sl<AppBannerCubit>()),
       ],
       child: BlocBuilder<ThemeCubit, ThemeMode>(
         builder: (context, themeMode) {
           return MaterialApp.router(
             title: 'Avenue',
             debugShowCheckedModeBanner: false,
-            builder: (context, child) {
-              return ConnectivityBannerWrapper(child: child!);
-            },
             themeMode: themeMode,
             theme: ThemeData(
               useMaterial3: true,
