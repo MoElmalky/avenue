@@ -10,7 +10,6 @@ class SettingsState extends Equatable {
   final String? feedbackErrorMessage;
   final bool isDev;
   final String aiModel;
-  final String? aiApiKey;
 
   const SettingsState({
     this.weekStartDay = 1, // Default Monday
@@ -20,7 +19,6 @@ class SettingsState extends Equatable {
     this.feedbackErrorMessage,
     this.isDev = false,
     this.aiModel = 'google/gemini-3-pro-preview',
-    this.aiApiKey,
   });
 
   SettingsState copyWith({
@@ -31,7 +29,6 @@ class SettingsState extends Equatable {
     String? feedbackErrorMessage,
     bool? isDev,
     String? aiModel,
-    String? aiApiKey,
   }) {
     return SettingsState(
       weekStartDay: weekStartDay ?? this.weekStartDay,
@@ -41,7 +38,6 @@ class SettingsState extends Equatable {
       feedbackErrorMessage: feedbackErrorMessage ?? this.feedbackErrorMessage,
       isDev: isDev ?? this.isDev,
       aiModel: aiModel ?? this.aiModel,
-      aiApiKey: aiApiKey ?? this.aiApiKey,
     );
   }
 
@@ -54,6 +50,5 @@ class SettingsState extends Equatable {
     feedbackErrorMessage,
     isDev,
     aiModel,
-    aiApiKey,
   ];
 }
