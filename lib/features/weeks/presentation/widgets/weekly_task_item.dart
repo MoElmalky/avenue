@@ -20,8 +20,9 @@ class WeeklyTaskItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (task.startTime == null || task.endTime == null)
+    if (task.startTime == null || task.endTime == null) {
       return const SizedBox.shrink();
+    }
 
     // Ensure we use local time for positioning
     final localStart = task.startTime!.toLocal();
